@@ -3,6 +3,8 @@
      on:mouseover={() => getCostText({id})} 
      on:mouseover={() => getHeaderText({id})}
      on:mouseover={() => getTitleText({id})} 
+     on:mouseover={() => createUpdateInterval({id})} 
+     on:mouseout={() => destroyUpdateInterval({id})} 
      on:click={() => buy({id})}
      class='has-tooltip mainText p-1 items-center text-center game-btn select-none'>{text}
               <span class='w-[175px] tooltip shadow-lg p-1 border-white border bg-[#222529] mr-6'>
@@ -42,7 +44,7 @@
   let tooltipText = [];
   let producerText = [];
   import { res } from '../data/player.js';
-  import { builds, allGens } from '../data/buildings.js';
+  import { builds, allGens, buildCounts } from '../data/buildings.js';
   import  fm  from '../calcs/formulas.js'
   import {get} from 'svelte/store'
   import {onMount} from 'svelte'
@@ -56,12 +58,26 @@
     return (Math.round(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();// + s
   })
 
+  let tooltipUpdateInterval;
+
+
+  // these methods allow tooltips to auto-update each second
+  function createUpdateInterval(bid) {
+    tooltipUpdateInterval = setInterval(() => {
+      getCostText(bid);
+      getProducerText(bid);
+    }, 1000);
+  }
+
+  function destroyUpdateInterval(bid) {
+    clearInterval(tooltipUpdateInterval);
+  }
 
   function buy(bid) { 
     let takes = {}   
     for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
       let ratio = get(builds)[bid.id]['ratio']
-      let count = get(builds)[bid.id]['count']
+      let count = get(buildCounts)[bid.id]
       let req = fm.geomSequenceSum(val,ratio,count);
       if (get(res)[type][0] < req) {
         return;
@@ -71,7 +87,7 @@
       }
     }
     res.subMany(takes);
-    builds.add(bid.id, 1);
+    buildCounts.add(bid.id, 1);
     if (typeof get(builds)[bid.id]['caps'] != undefined) {
       res.addCapMany(get(builds)[bid.id]['caps']);
     }
@@ -82,7 +98,7 @@
   }
 
   function getTitleText(bid) {
-    titleText = get(builds)[bid.id]['name'] + " (" + get(builds)[bid.id]['count'] + ") "
+    titleText = get(builds)[bid.id]['name'] + " (" + get(buildCounts)[bid.id] + ") "
   }
 
   function getHeaderText(bid) {
@@ -107,7 +123,7 @@
     let list = []
     for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
       let ratio = get(builds)[bid.id]['ratio']
-      let count = get(builds)[bid.id]['count']
+      let count = get(buildCounts)[bid.id]
       let req = fm.geomSequenceSum(val,ratio, count)
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
@@ -116,6 +132,7 @@
       }
       if (get(res)[type][0] < req) {
         let remain = req - have;
+        // in seconds vv
         let timeRemain = Math.round(remain / (5*get(allGens)[type]));
         let timeText = (get(allGens)[type] != 0 ? formatToTime(timeRemain) : 'inf');
         txt += " (" + timeText + ")"
@@ -162,12 +179,13 @@
 
 <style>
   .game-btn {
-    border: 1px solid white;
+    border: 1px solid #d9d9d9;
     color: #d9d9d9;
     cursor: pointer;
   }
   .game-btn:hover {
     color: white;
+    border: 1px solid white;
   }
   .text-small-gray {
     font-size: 9px;

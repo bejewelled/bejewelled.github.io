@@ -80,6 +80,12 @@ function playerRes(info) {
 		      		return i;
 	      		})
 	      	}
+		},
+		setSelf(obj) {
+			update(i => {
+				i = obj;
+				return i;
+			})
 		}
 	};
 }
@@ -91,3 +97,12 @@ export const res = playerRes({
 	fame: [0,200],
 	science: [0,200]
 });
+
+export const resColors = writable({
+	kelp: 'text-white',
+	sand: 'text-white',
+	wood: 'text-white',
+	fame: 'text-orange',
+	science: 'text-sky-500'
+
+})

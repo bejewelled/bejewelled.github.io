@@ -6,11 +6,45 @@ function buildings(info) {
 		subscribe,
 		add(id, amt) {
 			update(i => {
-	      		i[id]['count'] = i[id]['count'] + amt;
+	      		buildCounts[id] += amt;
 	      		return i;
       		})
 		},
+		setSelf(obj) {
+			update(i => {
+				i = obj;
+				return i;
+			})
+		}
 	}
+}
+
+function buildingCountCreator(info) {
+	const { subscribe, set, update } = writable(info);
+
+	return {
+		subscribe,
+		init(len) {
+			update(i => {
+				for(let c = 0; c < len; c++) {
+					i[c.toString()] = 0;
+				}
+				return i;
+			})
+		},
+		add(id, amt) {
+			update(i => {
+				i[id] += amt;
+				return i;
+			})
+		},
+		setSelf(obj) {
+			update(i => {
+				i = obj;
+				return i;
+			})
+		}
+	}	
 }
 
 function allGensCreator(info) {
@@ -28,13 +62,14 @@ function allGensCreator(info) {
 			update(i => {
 				i = {};
 				let b = Object.entries(get(builds))
+				let cts = get(buildCounts);
 				for (let k of b) {
 					let curr = k[1];
 					// https://stackoverflow.com/questions/67390960/javascript-how-to-merge-two-objects-and-sum-the-values-of-the-same-key
 					// let next = Object.entries(i).reduce((acc, [key, value]) => 
 				 //  ({ ...acc, [key]: (acc[key] || 0) + (value*curr['count'])}), { ...curr['gens'] });
 					for (let [ck, cv] of Object.entries(curr['gens'])) {
-						i[ck] = (i['ck'] || 0) + cv*curr['count'];
+						i[ck] = (i['ck'] || 0) + cv*cts[k[0]];
 					}
 				}
 				return i;
@@ -64,12 +99,12 @@ export const builds = buildings({
 		description: 'Catches sand and twigs from the sea floor.',
 		count: 0,
 		costs: {
-			kelp: 100
+			kelp: 250
 		},
 		ratio: 1.25,
 		gens: {
-			sand: 0.003,
-			wood: 0.0004
+			sand: 0.007,
+			wood: 0.0009
 		},
 		caps: {}
 	},
@@ -94,7 +129,8 @@ export const builds = buildings({
 		description: 'A place for your turtles to store excess stuff.',
 		count: 0,
 		costs: {
-			wood: 3
+			sand: 6,
+			wood: 1
 		},
 		ratio: 1.75,
 		gens: {
@@ -112,4 +148,9 @@ export const allGens = allGensCreator({
 	kelp: 0,
 	sand: 0,
 	wood: 0
+})
+
+export const buildCounts = buildingCountCreator({
+	'0': 0,
+	'1': 1
 })

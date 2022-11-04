@@ -9,12 +9,13 @@
 
 <style>
   .game-btn {
-    border: 1px solid white;
+    border: 1px solid #d9d9d9;
     color: #d9d9d9;
     cursor: pointer;
     user-select: none;
   }
   .game-btn:hover {
     color: white;
+    border: 1px solid white;
   }
 </style>
