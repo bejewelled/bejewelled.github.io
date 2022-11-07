@@ -1,4 +1,5 @@
-import {writable} from 'svelte/store';
+import {writable, get} from 'svelte/store';
+import {builds} from './buildings.js';
 
 function playerRes(info) {
 	const { subscribe, set, update, get } = writable(info);
@@ -12,10 +13,10 @@ function playerRes(info) {
       		})
 		},
 		// adds many at once with typical object format (type: amt)
-		addMany(obj) {
+		addMany(obj, multi) {
 			for (let [type, amt] of Object.entries(obj)) {
 				update(i => {
-		      		i[type][0] = (i[type][0] + amt < i[type][1] ? i[type][0]+amt : i[type][1])
+		      		i[type][0] = (i[type][0] + (amt*multi) < i[type][1] ? i[type][0]+(amt*multi) : i[type][1])
 		      		return i;
 	      		})
 	      	}
@@ -81,6 +82,20 @@ function playerRes(info) {
 	      		})
 	      	}
 		},
+		updateAllCaps() {
+			update(i => {
+				for (let [type, amt] of Object.entries(get(baseRes))) {
+					console.log(type);
+			      		i[type][1] = amt;
+		      	}
+				for (let [id, val] of Object.entries(get(builds))) {
+					for (let [type, amt] of Object.entries(val['caps'])) {
+				      		i[type][1] = (i[type][1] + amt)
+			      		}
+			      	}
+				return i;
+			});
+		},
 		setSelf(obj) {
 			update(i => {
 				i = obj;
@@ -91,18 +106,18 @@ function playerRes(info) {
 }
 
 export const res = playerRes({
-	kelp: [0,300],
+	kelp: [0,500],
 	sand: [0,15],
 	wood: [0,15],
 	fame: [0,200],
 	science: [0,200]
 });
 
-export const resColors = writable({
-	kelp: 'text-white',
-	sand: 'text-white',
-	wood: 'text-white',
-	fame: 'text-orange',
-	science: 'text-sky-500'
+export const baseRes = writable({
+	kelp: [0,500],
+	sand: [0,50],
+	wood: [0,50],
+	fame: [0,200],
+	science: [0,200]
+});
 
-})

@@ -1,38 +1,37 @@
 
-<div 
-     on:mouseover={() => getCostText({id})} 
+<div on:mouseover={() => getCostText({id})} 
      on:mouseover={() => getHeaderText({id})}
      on:mouseover={() => getTitleText({id})} 
-     on:mouseover={() => getProducerText({id})} 
      on:mouseover={() => createUpdateInterval({id})} 
      on:mouseout={() => destroyUpdateInterval({id})} 
      on:click={() => buy({id})}
-     class='has-tooltip gameText p-1 items-center text-center border-solid
-     {affordStyle} select-none'>{text}
-              <span class='w-[215px] tooltip shadow-lg p-1 border-white border bg-[#222529] mr-6'>
+     class='has-tooltip mainText p-1 items-center text-center 
+     {affordStyle} select-none'>{titleText}
+              <span class='w-[175px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
               <div class='grid grid-flow-dense grid-rows items-baseline'>
               {#each tooltipText as line}
               <div class="row">
-                <div class='grid items-start grid-cols-5'>
+                <div class='grid items-start grid-cols-3'>
                 <div class="col-span-1 items-start text-left
                 {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.val}</div>
-                 <div class="col-span-4 text-right pr-1
+                 <div class="col-span-2 text-left
                  items-baseline {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.text}</div>
               </div>
             </div>
-              {/each}
+              {/each} 
+              {#if bonusText.length > 0}
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>              
-              {#each producerText as line}
+              {#each bonusText as line}
               <div class="row grid-rows-1 items-baseline">
-                <div class='grid text-small-gray grid-cols-3'>
-                 <div class="col-span-1 text-left">{line.val}</div>
-                 <div class="col-span-2 text-left">{line.text}</div>
+                <div class='grid text-small-gray grid-cols-1'>
+                 <div class="col-span-1 text-left">{line}</div>
               </div>
-            </div>
+            </div> 
               {/each}
+              {/if}          
               </span>
             </div>
 
@@ -44,13 +43,15 @@
   let titleText = '';
   let headerText = '';
   let tooltipText = [];
-  let producerText = [];
+  $: bonusText = getBonusText(id);
   let affordStyle;
   import { res } from '../data/player.js';
-  import { builds, allGens, allBonuses, buildCounts } from '../data/buildings.js';
+  import { science } from '../data/science.js';
+  import {builds} from '../data/buildings.js';
   import  fm  from '../calcs/formulas.js'
   import {get} from 'svelte/store'
   import {onMount, onDestroy} from 'svelte'
+  import {allGens} from '../data/buildings.js'
 
   let decround  = ((i, places) => {
     let s = ''; // shortener
@@ -61,11 +62,12 @@
     return (Math.round(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();// + s
   })
 
+
   let tooltipUpdateInterval;
-  let checkResUnlockInterval;
   let affordStyleInterval;
 
-  onMount(() => { 
+  onMount(() => {
+    getTitleTextNoobject(id);
     getAffordStyle(id);   
     affordStyleInterval = setInterval(() => {
       getAffordStyle(id);
@@ -73,27 +75,27 @@
   })
 
   onDestroy(() => {
-    clearInterval(checkResUnlockInterval)
-    clearInterval(affordStyleInterval)
+    clearInterval(affordStyleInterval);
   })
   // these methods allow tooltips to auto-update each second
-  function createUpdateInterval(bid) {
+  function createUpdateInterval(sid) {
     tooltipUpdateInterval = setInterval(() => {
-      getCostText(bid);
-      getProducerText(bid);
+      getCostText(sid);
     }, 200);
   }
 
-  function destroyUpdateInterval(bid) {
+  function destroyUpdateInterval(sid) {
     clearInterval(tooltipUpdateInterval);
   }
 
-  function buy(bid) { 
+  function buy(sid) { 
+
+    if (get(science)[sid.id]['researched']) {
+      return;
+    }
     let takes = {}   
-    for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
-      let ratio = get(builds)[bid.id]['ratio']
-      let count = get(buildCounts)[bid.id]
-      let req = fm.geomSequenceSum(val,ratio,count);
+    for (let [type, val] of Object.entries(get(science)[sid.id]['costs'])) {
+      let req = val;
       if (get(res)[type][0] < req) {
         return;
       }
@@ -102,24 +104,54 @@
       }
     }
     res.subMany(takes);
-    buildCounts.add(bid.id, 1);
-    if (typeof get(builds)[bid.id]['caps'] != undefined) {
-      res.addCapMany(get(builds)[bid.id]['caps']);
+    science.unlock(sid.id);
+    science.checkCriteria();
+
+    // handle special cases here
+    switch ((sid.id).toString()) {
+      case '4':
+        builds.setItemVal(2, 'caps', {
+          science: 150
+        });
+        res.updateAllCaps();
+        break;
+      default:
+        break;
     }
-    getTitleText(bid);
-    getCostText(bid);
-    getProducerText(bid);
-    getAffordStyle(bid.id);
-    allGens.updateAll();
-    allBonuses.updateAll();
+
+    getTitleText(sid);
+    getAffordStyle(sid.id);
+    getCostText(sid);
   }
 
-  function getTitleText(bid) {
-    titleText = get(builds)[bid.id]['name'] + " (" + get(buildCounts)[bid.id] + ") "
+
+  function getAffordStyle(bid) {
+    for (let [type, val] of Object.entries(get(science)[bid]['costs'])) {
+      let req = val;
+      if (get(res)[type][0] < req) {
+        affordStyle = "game-btn-noafford border-[#797979]";
+        return;
+      }
+    }
+    affordStyle =  "game-btn border-[#d9d9d9]";   
   }
 
-  function getHeaderText(bid) {
-    headerText = get(builds)[bid.id]['description']
+  function getTitleTextNoobject(sid) {
+    titleText = get(science)[id]['name'];
+    if (get(science)[id]['researched'] == true) {
+          titleText += ' (researched)'
+    }
+  }
+
+  function getTitleText(sid) {
+    titleText = get(science)[sid.id]['name'];
+    if (get(science)[sid.id]['researched'] == true) {
+          titleText += ' (researched)'
+    }
+  }
+
+  function getHeaderText(sid) {
+    headerText = get(science)[sid.id]['description']
   }
 
   function formatToTime(t) {
@@ -136,25 +168,10 @@
     return text;
   }
 
-  function getAffordStyle(bid) {
-    for (let [type, val] of Object.entries(get(builds)[bid]['costs'])) {
-      let ratio = get(builds)[bid]['ratio']
-      let count = get(buildCounts)[bid]
-      let req = fm.geomSequenceSum(val,ratio, count)
-      if (get(res)[type][0] < req) {
-        affordStyle = "game-btn-noafford border-[#797979]";
-        return;
-      }
-    }
-    affordStyle =  "game-btn border-[#d9d9d9]";   
-  }
-
-  function getCostText(bid) {
+  function getCostText(sid) {
     let list = []
-    for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
-      let ratio = get(builds)[bid.id]['ratio']
-      let count = get(buildCounts)[bid.id]
-      let req = fm.geomSequenceSum(val,ratio, count)
+    for (let [type, val] of Object.entries(get(science)[sid.id]['costs'])) {
+      let req = val;
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
       if (req > get(res)[type][1]) {
@@ -182,41 +199,13 @@
     tooltipText = list;
   }
 
-  function getProducerText(bid) {
-    console.log(bid);
-    let list = []
-    for (let [type, val] of Object.entries(get(builds)[bid.id]['gens'])) {
-        let txt = (val > 0 ? '+' : '-') + decround(val*5, 3).toString() + " / sec" 
-        list.push({
-          type: 'afford',
-          val: type,
-          text: txt
-        });
+
+  function getBonusText(sid) {
+    if (!(get(science)[sid]['bonuses'] === undefined)) {
+      return get(science)[sid]['bonuses'];
     }
-    if (typeof get(builds)[bid.id]['caps'] != undefined) {
-    for (let [type, val] of (Object.entries(get(builds)[bid.id]['caps']))) {
-        let txt = decround(val, 3).toString()
-        list.push({
-          type: 'afford',
-          val: type + ' cap:',
-          text: txt
-        });
-      }
-    }
-    if (!(get(builds)[bid.id]['bonuses'] === undefined)) {
-    for (let [type, val] of (Object.entries(get(builds)[bid.id]['bonuses']))) {
-        let txt = decround(val, 3).toString() + "%"
-        list.push({
-          type: 'afford',
-          val: type + ' bonus:',
-          text: txt
-        });
-      }
-    }
-    producerText = list;
+    return [];
   }
-
-
 
 </script>
 
@@ -227,8 +216,8 @@
     cursor: pointer;
   }
   div span .game-btn-noafford {
-    border: 1px solid #d9d9d9;
-    color: #d9d9d9;
+    border: 1px solid #c9c9c9;
+    color: #c9c9c9;
     cursor: pointer;
   }
   .game-btn {

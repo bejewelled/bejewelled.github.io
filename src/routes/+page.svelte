@@ -2,7 +2,14 @@
 	<div class='grid mainText row header-bar h-[3px] p-1'>
 		<div class='grid grid-cols-12 items-start'>
 			<div class='col-span-3'>
-				<SaveLoadButton on:click={() => save()} text='Save'/>
+					<div class='flex flex-row'>
+						<div class='flex'>
+							<SaveLoadButton on:click={() => save()} text='Save'/>
+						</div>
+						<div class='flex'>
+							<SaveLoadButton on:click={() => reset()} text='Reset'/>
+						</div>
+					</div>
 			</div>
 			<div class='col-span-5'>
 
@@ -10,201 +17,321 @@
 		</div>
 	</div>
 		<div class="grid row items-start grid-cols-12 p-3">
-			<div class='p-1 col-span-3'>
-				<div class='grid grid-rows-12 items-start'>
-					<div class='grid grid-cols-12 items-start'>
-					{#each currRes as res}
-					{#if res[1][0] > 0}
-					<div class="col-span-4 mainText">
-					<span class="{colors[res[0]]}">{res[0]}
-					</span></div>	
-					<div class='col-span-5 text-left mainText'>
-						<span
-						class='{res[1][0] > res[1][1]*0.9997 ? "text-rose-400" : 
-						res[1][0] > res[1][1]*0.85 ? "text-orange-400" : "text-white"}'>{round(res[1][0], 3)}
-						</span>
-					 	<span class='gameTextWhite'> / {round(res[1][1], 3)}</span>	
-					</div>
 
-				<div class='col-span-3 text-left mainText gameTextWhite 
-				has-tooltip mainText select-none'>
-				{#if $allGens[res[0]] > 0}+{:else}-{/if}{round($allGens[res[0]]*5, 3)} / sec
-						<!-- production tooltip -->
-			            <span class='w-[160px] 
-			            grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
-			            	<div class='grid row grid-cols-12 items-start pb-1'>
-								<span class='col-span-7 text-left'>
-									Production: 
-								</span>
-								<span class='col-span-5 text-left'>
-									{#if $allGens[res[0]] > 0}+{:else}-{/if}
-									{round($allGens[res[0]]*5, 3)} / sec
-								</span>
-							</div>
-							<hr/>
-			            	<div class='grid row grid-cols-12 pt-1 text-left'>							
-				              	<span class='col-span-7'>Time until cap: </span>
-				              	<span 
-				              	class='col-span-5 text-left {timeToCap(res) <= 0.0003 ? "text-rose-400" : 
-				              	timeToCap(res) <= 120 ? "text-orange-400" : "text-white"}'>
-				              	{fm.formatToTime(Math.round((res[1][1] - res[1][0]) / (5*$allGens[res[0]])))}
-				              	</span>
-			           	 	</div>
-			            </span>
-            	</div>
-					{/if}	
-					{/each}
-
-					</div>
-				</div>
-			</div>
-
-			<!-- Game Tabs go here -->
-			<div class='p-4 col-span-5 items-start'>
-				<div class='flex flex-row'>
-					<div class='flex'>
-						<TabButton on:click={() => changeTab('main')} text='Buildings'/>
-					</div>
-					<div class='flex'>
-						<TabButton on:click={() => changeTab('science')} text='Science'/>
-					</div>
-				</div>
-
-				{#if activeTab == 'main'}
-				<div class='grid row'>
-					<div class='p-1 grid grid-cols-2 items-center'>
-						<div class='p-1'>
-							<ClickButton text={'Gather Kelp'} on:click={kelpClick}></ClickButton>
+				<!-- Resource Displays -->
+				<div class='p-1 col-span-3'>
+					<div class='grid grid-rows-12 items-start'>
+						<div class='grid grid-cols-12 items-start'>
+						{#each currRes as res}
+						{#if res[1][0] > 0}
+						<div class="col-span-4 mainText">
+						<span class="{colors[res[0]]}">{res[0]}
+						</span></div>	
+						<div class='col-span-5 text-left mainText'>
+							<span
+							class='{res[1][0] > res[1][1]*0.9997 ? "text-rose-400" : 
+							res[1][0] > res[1][1]*0.85 ? "text-orange-400" : "text-white"}'>{round(res[1][0], 3)}
+							</span>
+						 	<span class='gameTextWhite'> / {round(res[1][1], 3)}</span>	
 						</div>
-						<!-- change the length each time you add a building !-->
-						{#each {length: 4} as _, i}
-						<div class='p-1'>
-							<BuildingButton id={i} class='p-1' 
-							text={$builds[i]['name'] + " (" + $buildCounts[i] + ")"}/>
-						</div>
+
+					<div class='col-span-3 text-left mainText gameTextWhite 
+					has-tooltip mainText select-none'>
+					{#if $allGens[res[0]] > 0}+{:else}-{/if}{round($allGens[res[0]]*5*(1+$allBonuses[res[0]]/100 || 1), 3)} / sec
+
+
+							<!-- production tooltip -->
+				            <span class='w-[160px] 
+				            grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
+				        <div class='grid row grid-cols-12 items-start pb-1'>
+									<span class='col-span-7 text-left'>
+										Production: 
+									</span>
+									<span class='col-span-5 text-left'>
+										{#if $allGens[res[0]] > -0.0003}+{:else}-{/if}
+										{round($allGens[res[0]]*5, 3)} / sec
+									</span>
+								</div>
+								<!-- add bonuses to tooltip, if applicable -->
+								{#if Math.abs($allBonuses[res[0]]) > 0.0003}
+				        <div class='grid row grid-cols-12 items-start pb-1'>
+									<span class='col-span-7 text-left'>
+										Bonuses: 
+									</span>
+									<span class='col-span-5 text-left'>
+										{#if $allBonuses[res[0]] > -0.0003}+{:else}-{/if}
+										{round($allBonuses[res[0]], 3)}%
+									</span>
+								</div>
+								{/if}
+								<hr/>
+				            	<div class='grid row grid-cols-12 pt-1 text-left'>							
+					              	<span class='col-span-7'>Time until cap: </span>
+					              	<span 
+					              	class='col-span-5 text-left {timeToCap(res) <= 0.0003 ? "text-rose-400" : 
+					              	timeToCap(res) <= 120 ? "text-orange-400" : "text-white"}'>
+					              	{fm.formatToTime(Math.round((res[1][1] - res[1][0]) / (5*$allGens[res[0]])))}
+					              	</span>
+				           	 	</div>
+				            </span>
+	            	</div>
+						{/if}	
 						{/each}
 
-						<div class='p-1'>
-
 						</div>
 					</div>
 				</div>
+
+				<!-- Game Tab Buttons go here -->
+				<div class='p-4 col-span-5 items-start'>
+					<div class='flex flex-row'>
+						<div class='flex'>
+							<TabButton on:click={() => changeTab('main')} text='Buildings'/>
+						</div>
+						{#if $res['science'][0] > 0.01}
+						<div class='flex'>
+							<TabButton on:click={() => changeTab('science')} text='Science'/>
+						</div>
+						{/if}
+					</div>
+
+				<!-- Game Tab Content goes here -->
+				{#if activeTab == 'main'}
+					<div class='grid row'>
+						<div class='p-1 grid grid-cols-2 items-center'>
+							<div class='p-1'>
+								<ClickButton text={'Gather Kelp'} on:click={kelpClick}></ClickButton>
+							</div>
+							<!-- change the length each time you add a building !-->
+							{#each {length: numBuildings} as _, i}
+							{#if $builds[i]['available'] && $builds[i]['visible']}
+							<div class='p-1'>
+								<BuildingButton id={i} 
+								text={$builds[i]['name'] + " (" + $buildCounts[i] + ")"}/>
+							</div>
+							{/if}
+							{/each}
+
+							<div class='p-1'>
+
+							</div>
+						</div>
+					</div>
 				{/if}
 
-				<div class='col-span-4'>
-				</div>
+				{#if activeTab == 'science'}
+					<label>
+						<input type=checkbox bind:checked={showUnlockedSciences}>
+						<span class='gameTextWhite select-none'>Show already researched technologies</span>
+					</label>
+					{#each {length: numScience} as _, i}
+						{#if (!($science[i]['researched']) || showUnlockedSciences) && $science[i]['available']}
+						<div class='p-1'>
+							<ScienceButton id={i} class='p-1' 
+							text={$science[i]['name']}/>
+						</div>
+						{/if}
+					{/each}
+				{/if}
+
+
+				<div class='col-span-4'></div>
 			</div>
 		</div>
 </div>
 
 
 <script>
-import BuildingButton from '../components/BuildingButton.svelte';
-import ClickButton from '../components/ClickButton.svelte';
-import SaveLoadButton from '../components/SaveLoadButton.svelte';
-import TabButton from '../components/TabButton.svelte';
-import { res } from '../data/player.js';
-import { builds, allGens, buildCounts} from '../data/buildings.js';
-import {onMount, onDestroy} from 'svelte';
-import {get} from 'svelte/store'
-import fm from '../calcs/formulas.js'
+	import BuildingButton from '../components/BuildingButton.svelte';
+	import ScienceButton from '../components/ScienceButton.svelte';
+	import ClickButton from '../components/ClickButton.svelte';
+	import SaveLoadButton from '../components/SaveLoadButton.svelte';
+	import TabButton from '../components/TabButton.svelte';
+	import { res, baseRes } from '../data/player.js';
+	import { builds, allGens, allBonuses, buildCounts, baseBuilds, baseAllGens, baseBuildCounts } from '../data/buildings.js';
+	import { science, baseScience } from '../data/science.js';
+	import {onMount, onDestroy} from 'svelte';
+	import {get} from 'svelte/store'
+	import fm from '../calcs/formulas.js'
 
-let lastTick = performance.now()
-let currRes = Object.entries(get(res));
-let colors = {
-	kelp: 'text-white',
-	sand: 'text-white',
-	wood: 'text-white',
-	fame: 'text-orange',
-	science: 'text-sky-500'
+	$: numBuildings = Object.entries(get(builds)).length;
+	$: numScience = Object.entries(get(science)).length;
+	let saveInterval;
+	let checkResUnlockInterval;
+	let currRes = Object.entries(get(res));
+	let colors = {
+		kelp: 'text-white',
+		sand: 'text-white',
+		wood: 'text-white',
+		fame: 'text-orange',
+		science: 'text-sky-500'
 
-}
-let activeTab = 'main';
-let resBlue = ['science'];
-let getLength = ((obj) => {
-	return Object.keys(obj).length;
-});
-let timeToCap = ((res) => {
-	return Math.round((res[1][1] - res[1][0]) / (5*get(allGens)[res[0]]))
-});
-// number rounder. Use 3 decimals as default
-// add more when needed (like thousands, etc)
-let round  = ((i, places) => {
-	let s = ''; // shortener
-	if (i > 9750) {
-		i /= 1000;
-		s = 'K';
 	}
- 	return (Math.floor(i*Math.pow(10,places))/Math.pow(10,places)).toString() + s;
-})
-
-onMount(() => {
-	console.log(currRes[4][1][2])
-	buildCounts.init(100);
-	if (localStorage.getItem('data') !== null) {
-		load();
-	}
-	let rid = requestAnimationFrame(function update() {
-		let now = performance.now()
-	  	const delta = now - lastTick
-	  	lastTick = now
+	let activeTab = 'main';
+	let showUnlockedSciences = false;
+	let getLength = ((obj) => {
+		return Object.keys(obj).length;
 	});
-	// main game loop
-	setInterval(function gameLoop() {
-		rid = requestAnimationFrame(function update() {
+	let timeToCap = ((res) => {
+		return Math.round((res[1][1] - res[1][0]) / (5*get(allGens)[res[0]]))
+	});
+
+	// number rounder. Use 3 decimals as default
+	// add more when needed (like thousands, etc)
+	let round  = ((i, places) => {
+		let s = ''; // shortener
+		if (i > 9750) {
+			i /= 1000;
+			s = 'K';
+		}
+		if (i < 9750) {
+			return (Math.floor(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();		
+		}
+	 	return (Math.floor(i*Math.pow(10,places))/Math.pow(10,places)).toString() + s;
+	})
+
+	// onMount
+	let lastTick = performance.now()
+	onMount(() => {
+		// init build count list
+		buildCounts.init(100);
+		// fix base buildings/science loadouts if there is a discrepancy
+		baseBuilds.setSelf(get(builds));
+		baseScience.setSelf(get(science));
+		console.log(get(baseBuilds));
+		// if there is save data, load it
+		if (localStorage.getItem('data') !== null) {
+			load();
+			// adds new content, if needed
+			fixContent();
+			res.updateAllCaps();
+			allGens.updateAll();
+		}
+		// start main game loop
+		let rid = requestAnimationFrame(function update() {
 			let now = performance.now()
 		  	const delta = now - lastTick
 		  	lastTick = now
-		  	//res.add('kelp', 0.004*(delta/200))
-		  	currRes = Object.entries(get(res));
-		  	addRes();
 		});
-	}, 200 );
-	// save every 30s (this time doesn't have to be accurate so don't need to use dt)
-	setInterval(function savegame() {
+		// main game loop
+		setInterval(function gameLoop() {
+			rid = requestAnimationFrame(function update() {
+				let now = performance.now()
+			  	const delta = now - lastTick
+			  	lastTick = now
+			  	currRes = Object.entries(get(res));
+			  	addRes(delta/200);
+			});
+		}, 200 );
+
+		// save every 30s (this time doesn't have to be accurate so don't need to use dt)
+		// saveInterval = setInterval(function savegame() {
+		// 	save();
+		// }, 30000);
+		// check for new unlocks every second
+		checkResUnlockInterval = setInterval(() => { 
+			builds.checkSciCriteria();
+			for (let c in Object.entries(get(builds))) {
+      	builds.checkResUnlockThreshold(c[0]);
+    	}
+    }, 1000)
+		// unlock buildings that need to be unlocked
+		builds.checkSciCriteria();
+	});
+
+	function fixContent() {
+		let existingBuilds = get(builds);
+		builds.setSelf(get(baseBuilds));
+
+		let existingSci = get(science);
+		science.setSelf(get(baseScience));
+		//console.log(existingSci);
+		// baseScience.getSelf();
+		// const newSci = get(baseScience);
+		// //console.log(newSci);
+		for (let [id, obj] of Object.entries(get(science))) {
+				if (existingSci[id]['researched'] == true) {
+					science.unlock(id);
+				}
+		}
+		builds.checkSciCriteria();
+		allGens.updateAll();
+		allBonuses.updateAll();
+		science.checkCriteria();
+	}
+
+	function changeTab(tab) {
+		activeTab = tab;
+	}
+
+	function addRes(delta) {
+		let basegens = get(allGens);
+		let bonuses = get(allBonuses);
+		for (let k in basegens) {
+
+			if (!(bonuses[k] === undefined)) {
+				basegens[k] *= (1 + bonuses[k]/100);
+			}
+		}
+		res.addMany(basegens, delta);
+		allGens.updateAll();
+	}
+
+	function kelpClick() {
+		res.add('kelp', 1);
+
+	}
+
+	function save() {
+		const savedata= [get(res), get(builds), get(buildCounts), get(allGens)];
+		// const saveres = get(res);
+		// const savebuilds = get(builds);
+		// const savebuildcounts = get(buildCounts);
+		// const savegens = get(allGens);
+		let savestr = {}
+		savestr['res'] = get(res);
+		savestr['builds'] = get(builds);
+		savestr['buildCounts'] = get(buildCounts);
+		savestr['allGens'] = get(allGens);
+		savestr['science'] = get(science);
+		savestr = btoa(JSON.stringify(savestr));
+		localStorage.setItem('data', savestr);
+	}
+
+	function load() {
+		const savestr = JSON.parse(atob(localStorage.getItem('data')));
+		// const savedata = savestr.split("} ")
+		res.setSelf(savestr['res']);
+		builds.setSelf(savestr['builds']);
+		buildCounts.setSelf(savestr['buildCounts']);
+		science.setSelf(savestr['science']);
+		allGens.updateAll();
+		allBonuses.updateAll();
+		builds.checkSciCriteria();
+		science.checkCriteria();
+	 }
+
+	 function reset() {
+	 	let confLeft = 5;
+	 	if (!confirm("ARE YOU SURE you want to reset? This is a HARD reset and will clear everything!")) {
+	 		return;
+	 	}
+	 	let confText = prompt("Please type \"I want to reset the game.\" EXACTLY as shown (without quotes) to reset.");
+	 	if (confText !== "I want to reset the game.") {
+	 		return;
+	 	}
+		res.setSelf(get(baseRes));
+		console.log(get(baseRes));
+		console.log(get(res))
+		builds.setSelf(get(baseBuilds));
+		buildCounts.init(100);
+		science.setSelf(get(baseScience));
+		science.lockAll();
+		science.checkCriteria();
+		activeTab = 'main';
+		allGens.updateAll();	
 		save();
-	}, 30000);
-});
-
-function changeTab(tab) {
-	activeTab = tab;
-}
-
-function addRes() {
-	res.addMany(get(allGens));
-}
-
-function kelpClick() {
-	res.add('kelp', 1);
-
-}
-
-function save() {
-	const savedata= [get(res), get(builds), get(buildCounts), get(allGens)];
-	// const saveres = get(res);
-	// const savebuilds = get(builds);
-	// const savebuildcounts = get(buildCounts);
-	// const savegens = get(allGens);
-	let savestr = {}
-	savestr['res'] = get(res);
-	savestr['builds'] = get(builds);
-	savestr['buildCounts'] = get(buildCounts);
-	savestr['allGens'] = get(allGens);
-	savestr = btoa(JSON.stringify(savestr));
-	localStorage.setItem('data', savestr);
-}
-
-function load() {
-	// USE THE SAME ORDERING AS SAVE or it will throw an error
-	const savestr = JSON.parse(atob(localStorage.getItem('data')));
-	// const savedata = savestr.split("} ")
-	res.setSelf(savestr['res']);
-	builds.setSelf(savestr['builds']);
-	buildCounts.setSelf(savestr['buildCounts']);
-	allGens.updateAll();
-	console.log(savestr['buildCounts']);
- }
-
+	 }
 </script>
 
 
