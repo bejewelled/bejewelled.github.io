@@ -7,7 +7,7 @@
      on:click={() => buy({id})}
      class='has-tooltip mainText p-1 items-center text-center 
      {affordStyle} select-none'>{titleText}
-              <span class='w-[175px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
+              <span class='w-[215px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
@@ -17,7 +17,7 @@
                 <div class='grid items-start grid-cols-3'>
                 <div class="col-span-1 items-start text-left
                 {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.val}</div>
-                 <div class="col-span-2 text-left
+                 <div class="col-span-2 text-right pr-1
                  items-baseline {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.text}</div>
               </div>
             </div>
@@ -27,7 +27,7 @@
               {#each bonusText as line}
               <div class="row grid-rows-1 items-baseline">
                 <div class='grid text-small-gray grid-cols-1'>
-                 <div class="col-span-1 text-left">{line}</div>
+                 <div class="col-span-1 text-left">{line.label}{line.val}</div>
               </div>
             </div> 
               {/each}
@@ -44,23 +44,24 @@
   let headerText = '';
   let tooltipText = [];
   $: bonusText = getBonusText(id);
+  $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
   import { res } from '../data/player.js';
   import { science } from '../data/science.js';
-  import {builds} from '../data/buildings.js';
+  import {builds, buildCounts} from '../data/buildings.js';
   import  fm  from '../calcs/formulas.js'
   import {get} from 'svelte/store'
   import {onMount, onDestroy} from 'svelte'
   import {allGens} from '../data/buildings.js'
 
-  let decround  = ((i, places) => {
-    let s = ''; // shortener
-    // if (i > 9750) {
-    //   i /= 1000;
-    //   s = 'K';
-    // }
-    return (Math.round(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();// + s
-  })
+  const decround = (n, places) => {
+    if (n < 1e3) return n.toLocaleString();
+    if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(places) + "K";
+    if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(places) + "M";
+    if (n >= 1e9 && n < 1e12) return +(n / 1e9).toFixed(places) + "B";
+    if (n >= 1e12) return +(n / 1e12).toFixed(places) + "T";
+  };
+
 
 
   let tooltipUpdateInterval;
@@ -106,34 +107,31 @@
     res.subMany(takes);
     science.unlock(sid.id);
     science.checkCriteria();
-
     // handle special cases here
-    switch ((sid.id).toString()) {
-      case '4':
-        builds.setItemVal(2, 'caps', {
-          science: 150
-        });
-        res.updateAllCaps();
-        break;
-      default:
-        break;
-    }
-
+    science.updateSpecialCase(sid.id);
     getTitleText(sid);
     getAffordStyle(sid.id);
     getCostText(sid);
   }
 
+  function checkIfStorageAvailable(sid) {
+  }
 
   function getAffordStyle(bid) {
+    let canAfford = true;
     for (let [type, val] of Object.entries(get(science)[bid]['costs'])) {
       let req = val;
-      if (get(res)[type][0] < req) {
-        affordStyle = "game-btn-noafford border-[#797979]";
+      if (get(res)[type][1] < req) {
+        affordStyle = 'game-btn-nostorage';
         return;
+      } else if (get(res)[type][0] < req) {
+        affordStyle = "game-btn-noafford";
+        canAfford = false;
       }
     }
-    affordStyle =  "game-btn border-[#d9d9d9]";   
+    if (canAfford) {
+      affordStyle =  "game-btn";   
+    }
   }
 
   function getTitleTextNoobject(sid) {
@@ -176,6 +174,7 @@
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
       if (req > get(res)[type][1]) {
         txt = txt + "*"
+
       }
       if (get(res)[type][0] < req) {
         let remain = req - have;
@@ -210,25 +209,6 @@
 </script>
 
 <style>
- .game-btn-noafford {
-    border: 1px solid #696969;
-    color: #696969;
-    cursor: pointer;
-  }
-  div span .game-btn-noafford {
-    border: 1px solid #c9c9c9;
-    color: #c9c9c9;
-    cursor: pointer;
-  }
-  .game-btn {
-    border: 1px solid #c9c9c9;
-    color: #c9c9c9;
-    cursor: pointer;
-  }
-  .game-btn:hover {
-    color: white;
-    border: 1px solid white;
-  }
   .text-small-gray {
     font-size: 9px;
     color: gray;

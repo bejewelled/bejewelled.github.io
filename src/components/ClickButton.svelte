@@ -1,5 +1,5 @@
 
-<div on:click class='mainText p-1 items-center text-center game-btn'>{text}</div>
+<div on:click class='mainText p-1 mr-1 ml-1 items-center text-center game-btn'>{text}</div>
 
 
 

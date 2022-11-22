@@ -8,22 +8,39 @@ function playerRes(info) {
 		subscribe,
 		add(type, amt) {
 			update(i => {
-	      		i[type][0] = (i[type][0] + amt < i[type][1] ? i[type][0]+amt : i[type][1])
-	      		return i;
-      		})
+					if (i[type][1] > -0.9) {
+		      			i[type][0] = (i[type][0] + (amt) < i[type][1] ? i[type][0]+(amt) : i[type][1])
+		      			return i;
+		      		} else {
+		      			i[type][0] += amt;
+		      			return i;
+		      		}      		
+		     })
 		},
 		// adds many at once with typical object format (type: amt)
 		addMany(obj, multi) {
-			for (let [type, amt] of Object.entries(obj)) {
-				update(i => {
-		      		i[type][0] = (i[type][0] + (amt*multi) < i[type][1] ? i[type][0]+(amt*multi) : i[type][1])
-		      		return i;
-	      		})
-	      	}
+			update(i => {
+				for (let [type, amt] of Object.entries(obj)) {
+					if (amt >= 0) {
+						if (i[type][1] > -0.9) {
+			      			i[type][0] = (i[type][0] + (amt*multi) < i[type][1] ? i[type][0]+(amt*multi) : i[type][1])
+			      			
+			      		} else {
+			      			i[type][0] += amt*multi;
+			      			
+			      		}
+			      	} else {
+			      		i[type][0] = (i[type][0] + (amt*multi) > 0 ? i[type][0]-(amt*multi) : 0)
+			      	}
+				}
+				return i;
+	    	})
+	      	
 		},
 		addCap(type, amt) {
 			update(i => {
 	      		i[type][1] = (i[type][1] + amt)
+
 	      		return i;
       		})
 		},
@@ -82,19 +99,73 @@ function playerRes(info) {
 	      		})
 	      	}
 		},
-		updateAllCaps() {
+		setSelf(obj) {
 			update(i => {
-				for (let [type, amt] of Object.entries(get(baseRes))) {
-					console.log(type);
-			      		i[type][1] = amt;
-		      	}
-				for (let [id, val] of Object.entries(get(builds))) {
-					for (let [type, amt] of Object.entries(val['caps'])) {
-				      		i[type][1] = (i[type][1] + amt)
-			      		}
-			      	}
+				i = obj;
+				return i;
+			})
+		},
+		clear() {
+			update(i => {
+				for (let c of Object.entries(i)) {
+					i[c[0]][0] = 0;
+				}
 				return i;
 			});
+		}
+	};
+}
+
+function noCapOperator(info) {
+	const { subscribe, set, update, get } = writable(info);
+
+	return {
+		subscribe,
+		add(type, amt) {
+			update(i => {
+	      		i[type] += amt;
+	      		return i;
+      		})
+		},
+		// adds many at once with typical object format (type: amt)
+		addMany(obj, multi) {
+			for (let [type, amt] of Object.entries(obj)) {
+				update(i => {
+		      		i[type] += amt;
+		      		return i;
+	      		})
+	      	}
+		},
+		sub(type, amt) {
+			update(i => {
+	      		i[type] -= amt;
+	      		return i;
+      		})
+		},
+		// adds many at once with typical object format (type: amt)
+		subMany(obj) {
+			for (let [type, amt] of Object.entries(obj)) {
+				update(i => {
+		      		i[type] -= amt;
+		      		return i;
+	      		})
+	      	}
+		},
+		// note that set overrides any resource caps, so don't use this unless necessary!
+		set(type, amt) {
+			update(i => {
+	      		i[type] = amt;
+	      		return i;
+      		})
+		},
+		// adds many at once with typical object format (type: amt)
+		setMany(obj) {
+			for (let [type, amt] of Object.entries(obj)) {
+				update(i => {
+		      		i[type] = amt;
+		      		return i;
+	      		})
+	      	}
 		},
 		setSelf(obj) {
 			update(i => {
@@ -105,19 +176,36 @@ function playerRes(info) {
 	};
 }
 
-export const res = playerRes({
-	kelp: [0,500],
-	sand: [0,15],
-	wood: [0,15],
-	fame: [0,200],
-	science: [0,200]
-});
 
-export const baseRes = writable({
+// index 0 - the resource amount
+// index 1 - the cap amount, or -1 if uncapped
+export const res = playerRes({
 	kelp: [0,500],
 	sand: [0,50],
 	wood: [0,50],
-	fame: [0,200],
-	science: [0,200]
+	copper: [0,100],
+	iron: [0,100],
+	coal: [0, 50],
+	science: [0,200],
+	fame: [0,-1],
+	glory: [0,-1]
 });
 
+
+export const baseRes = playerRes({
+	kelp: [0,500],
+	sand: [0,50],
+	wood: [0,50],
+	copper: [0,100],
+	iron: [0,100],
+	coal: [0, 50],
+	science: [0,200],
+	fame: [0,-1],
+	glory: [0,-1]
+});
+
+
+export const gloryBonuses = noCapOperator({
+	'Production Bonus': 0,
+	'Cost Ratio Reduction': 0
+})

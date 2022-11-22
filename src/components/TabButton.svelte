@@ -1,4 +1,4 @@
-
+ 
 <div on:click class='pl-1 pr-1 mainText items-center text-center h-[16px] align-middle text-center options-btn'>
   <span class='align-baseline'>{text}</span>
 </div>

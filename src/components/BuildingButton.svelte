@@ -1,4 +1,4 @@
-
+<div class=' grid grid-cols-8 '>
 <div 
      on:mouseover={() => getCostText({id})} 
      on:mouseover={() => getHeaderText({id})}
@@ -7,9 +7,10 @@
      on:mouseover={() => createUpdateInterval({id})} 
      on:mouseout={() => destroyUpdateInterval({id})} 
      on:click={() => buy({id})}
-     class='has-tooltip gameText p-1 items-center text-center border-solid
-     {affordStyle} select-none'>{text}
-              <span class='w-[215px] tooltip shadow-lg p-1 border-white border bg-[#222529] mr-6'>
+     class='has-tooltip gameText py-1 items-center text-center border-solid ml-1 mr-1
+     {affordStyle} {toggleableBuild ? 'border-l-green-500 col-span-6' : 'col-span-8'}
+     select-none'>{text}
+              <span class='w-[215px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
@@ -34,11 +35,63 @@
             </div>
               {/each}
               </span>
-            </div>
+      </div>
+        {#if toggleableBuild}
+        
+         <div 
+           on:mouseover={() => getCostText({id})} 
+           on:mouseover={() => getHeaderText({id})}
+           on:mouseover={() => getTitleText({id})} 
+           on:mouseover={() => getProducerText({id})} 
+           on:mouseover={() => createUpdateInterval({id})} 
+           on:mouseout={() => destroyUpdateInterval({id})} 
+           on:click={() => changeToggleAmt({id}, 1)}
+           class='has-tooltip mainText col-span-1 items-center text-center border-solid ml-1 p-1 mr-1
+           {toggleAffordStyle} select-none'>+
+           <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
+              <div 
+              on:click={() => changeToggleAmt({id}, +5)}
+              class='text-med-gray game-btn'>+5</div>
+              <div 
+              on:click={() => changeToggleAmt({id}, $buildCounts[id])}
+              class='title text-med-gray game-btn items-start text-center'>+all</div>
+          </span>
+         </div>
+
+         <div 
+           on:mouseover={() => getCostText({id})} 
+           on:mouseover={() => getHeaderText({id})}
+           on:mouseover={() => getTitleText({id})} 
+           on:mouseover={() => getProducerText({id})} 
+           on:mouseover={() => createUpdateInterval({id})} 
+           on:mouseout={() => destroyUpdateInterval({id})} 
+           on:click={() => changeToggleAmt({id}, -1)}
+           class='has-tooltip mainText col-span-1 items-center text-center border-solid ml-1 p-1 mr-1
+           {toggleAffordStyle} select-none'>-
+           <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
+              <div 
+              on:click={() => changeToggleAmt({id}, -5)}
+              class='text-med-gray game-btn'>-5</div>
+              <div 
+              on:click={() => changeToggleAmt({id}, -1*$buildCounts[id])}
+              class='title text-med-gray game-btn items-start text-center'>-all</div>
+          </span>
+         </div>
+
+
+        {/if}
+    </div>
+
 
 
 
 <script>
+  import { res } from '../data/player.js';
+  import { builds, allGens, allBonuses, buildCounts } from '../data/buildings.js';
+  import  fm  from '../calcs/formulas.js'
+  import {get} from 'svelte/store'
+  import {onMount, onDestroy} from 'svelte'
+
 	export let text;
   export let id;
   let titleText = '';
@@ -46,20 +99,16 @@
   let tooltipText = [];
   let producerText = [];
   let affordStyle;
-  import { res } from '../data/player.js';
-  import { builds, allGens, allBonuses, buildCounts } from '../data/buildings.js';
-  import  fm  from '../calcs/formulas.js'
-  import {get} from 'svelte/store'
-  import {onMount, onDestroy} from 'svelte'
+  let toggleAffordStyle;
+  let toggleableBuild = get(builds)[id]['toggleable'];
 
-  let decround  = ((i, places) => {
-    let s = ''; // shortener
-    // if (i > 9750) {
-    //   i /= 1000;
-    //   s = 'K';
-    // }
-    return (Math.round(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();// + s
-  })
+  const decround = (n, places) => {
+    if (n < 1e3) return n.toLocaleString();
+    if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(places) + "K";
+    if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(places) + "M";
+    if (n >= 1e9 && n < 1e12) return +(n / 1e9).toFixed(places) + "B";
+    if (n >= 1e12) return +(n / 1e12).toFixed(places) + "T";
+  };
 
   let tooltipUpdateInterval;
   let checkResUnlockInterval;
@@ -69,7 +118,8 @@
     getAffordStyle(id);   
     affordStyleInterval = setInterval(() => {
       getAffordStyle(id);
-    }, 200);
+      getToggleAffordStyle(id);
+    }, 600);
   })
 
   onDestroy(() => {
@@ -92,7 +142,7 @@
     let takes = {}   
     for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
       let ratio = get(builds)[bid.id]['ratio']
-      let count = get(buildCounts)[bid.id]
+      let count = get(buildCounts)[bid.id][0]
       let req = fm.geomSequenceSum(val,ratio,count);
       if (get(res)[type][0] < req) {
         return;
@@ -114,8 +164,16 @@
     allBonuses.updateAll();
   }
 
+  function changeToggleAmt(bid, amt) {
+    if (amt >= 0) {
+      buildCounts.changeToggle(bid.id, amt);
+    } else {
+      buildCounts.changeToggle(bid.id, amt);
+    }
+  }
+
   function getTitleText(bid) {
-    titleText = get(builds)[bid.id]['name'] + " (" + get(buildCounts)[bid.id] + ") "
+    titleText = get(builds)[bid.id]['name'] + " (" + get(buildCounts)[bid.id][0] + ") "
   }
 
   function getHeaderText(bid) {
@@ -137,23 +195,42 @@
   }
 
   function getAffordStyle(bid) {
+    let canAfford = true;
     for (let [type, val] of Object.entries(get(builds)[bid]['costs'])) {
       let ratio = get(builds)[bid]['ratio']
-      let count = get(buildCounts)[bid]
-      let req = fm.geomSequenceSum(val,ratio, count)
-      if (get(res)[type][0] < req) {
-        affordStyle = "game-btn-noafford border-[#797979]";
+      let count = get(buildCounts)[bid][0]
+      let req = fm.geomSequenceSum(val,ratio, count);
+      if (get(res)[type][1] < req) {
+        affordStyle = 'game-btn-nostorage';
         return;
+      } else if (get(res)[type][0] < req) {
+        affordStyle = "game-btn-noafford";
+        canAfford = false;
       }
     }
-    affordStyle =  "game-btn border-[#d9d9d9]";   
+    if (canAfford) {
+      affordStyle =  "game-btn";   
+    }
+  }
+
+  function getToggleAffordStyle(bid) {
+    for (let [type, val] of Object.entries(get(builds)[bid]['gens'])) {
+      let ratio = get(builds)[bid]['ratio']
+      let count = get(buildCounts)[bid][0]
+      let req = val;
+      if (get(res)[type][0] < req) {
+        toggleAffordStyle = 'game-btn-toggleoff';
+        return;
+      }   
+    }
+    toggleAffordStyle =  "game-btn-toggleon"; 
   }
 
   function getCostText(bid) {
     let list = []
     for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
       let ratio = get(builds)[bid.id]['ratio']
-      let count = get(buildCounts)[bid.id]
+      let count = get(buildCounts)[bid.id][0]
       let req = fm.geomSequenceSum(val,ratio, count)
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
@@ -183,10 +260,9 @@
   }
 
   function getProducerText(bid) {
-    console.log(bid);
     let list = []
     for (let [type, val] of Object.entries(get(builds)[bid.id]['gens'])) {
-        let txt = (val > 0 ? '+' : '-') + decround(val*5, 3).toString() + " / sec" 
+        let txt = (val > 0 ? '+' : '') + decround(val*5, 3).toString() + " / sec" 
         list.push({
           type: 'afford',
           val: type,
@@ -215,31 +291,12 @@
     }
     producerText = list;
   }
-
-
-
+// all code logic
 </script>
 
+
+
 <style>
- .game-btn-noafford {
-    border: 1px solid #696969;
-    color: #696969;
-    cursor: pointer;
-  }
-  div span .game-btn-noafford {
-    border: 1px solid #d9d9d9;
-    color: #d9d9d9;
-    cursor: pointer;
-  }
-  .game-btn {
-    border: 1px solid #c9c9c9;
-    color: #c9c9c9;
-    cursor: pointer;
-  }
-  .game-btn:hover {
-    color: white;
-    border: 1px solid white;
-  }
   .text-small-gray {
     font-size: 9px;
     color: gray;

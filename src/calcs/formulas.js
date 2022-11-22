@@ -1,4 +1,3 @@
-
 export default class fm {
 	// calcs the cost of the nth building with x ratio
 	static geomSequenceSum(base, ratio, count) {
@@ -18,6 +17,22 @@ export default class fm {
     }
     text += Math.round(t).toString() + "s"
     return text;
+  }
+
+  static calcGloryBonusProduction(fame, type) {
+    if (fame < 1000) {
+      return 0;
+    } else {
+      return Math.pow((fame-1)/4, 0.575) 
+    }
+  }
+
+  static calcGloryCostRatioReduction(fame) {
+    if (fame < 50000) {
+      return 0;
+    } else {
+      return 12 - (13.4943 / Math.pow(fame, 0.03)) ;
+    }
   }
 
 }
