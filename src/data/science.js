@@ -1,32 +1,59 @@
+// @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
 import {res} from './player.js'
+/**
+ * @param {{ 0: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; 
+// the IDs of the science prerequisites to unlock this one (check README)
+criteria: never[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; 
+// the IDs of the science prerequisites to unlock this one (check README)
+criteria: never[]; }; 1: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; 2: { id: number; name: string; description: string; costs: { science: number; }; bonuses: { label: string; val: string; }[]; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; bonuses: { label: string; val: string; }[]; researched: boolean; available: boolean; criteria: number[]; }; 3: { id: number; name: string; description: string; costs: { science: number; }; bonuses: { label: string; val: string; }[]; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; bonuses: { label: string; val: string; }[]; researched: boolean; available: boolean; criteria: number[]; }; 4: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; 5: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; 6: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; 7: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; 8: { id: number; name: string; description: string; costs: { science: number; fame: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; fame: number; }; researched: boolean; available: boolean; criteria: number[]; }; 9: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; 10: { id: number; name: string; description: string; costs: { science: number; }; bonuses: { label: string; val: string; }[]; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; bonuses: { label: string; val: string; }[]; researched: boolean; available: boolean; criteria: number[]; }; 11: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; } | { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; criteria: number[]; }; }} info
+ */
 function scienceCreator(info) {
 	const { subscribe, set, update } = writable(info);
 
 	return {
 		subscribe,
+		/**
+		 * @param {string | number} id
+		 */
 		unlock(id) {
 			update(i => {
 	      		i[id]['researched'] = true;
 	      		return i;
       		})
 		},
+		/**
+		 * @param {string | number} id
+		 */
 		lock(id) {
 			update(i => {
 	      		i[id]['researched'] = false;
 	      		return i;
       		})
 		},
+		/**
+		 * @param {any} obj
+		 */
 		setSelf(obj) {
 			update(i => {
 				i = obj;
 				return i;
 			})
 		},
+		/**
+		 * @param {string | number} id
+		 * @param {any} item
+		 */
 		addNew(id, item) {
 			update(i => {
 				i[id] = item;
+				return i;
+			})
+		},
+		setItemVal(id, key, val) {
+			update(i => {
+				i[id][key] = val;
 				return i;
 			})
 		},
@@ -58,7 +85,10 @@ function scienceCreator(info) {
 				return i;
 			})
 		},
-		updateSpecialCase(sci) {
+		/**
+		 * @param {string | number} sci
+		 */
+		updateSpecialCase(sci, onLoad = false) {
 			update (i => {
 				console.log(i[sci]['id'])
 				switch (i[sci]['id'].toString()) {
@@ -83,10 +113,19 @@ function scienceCreator(info) {
 				        builds.updateItemValue(2, 'gens', {
 				          wood: get(builds)[2]['gens']['wood']*1.5
 				        });
-				        res.addCap('science', 150*get(buildCounts)[2][0]) // 2 as the ID for studies
+				        if (!onLoad) {
+				        	res.addCap('science', 150 * get(buildCounts)[2][0]) // 2 as the ID for studies
+				        }
 				        allGens.updateAll();
 				        console.log(get(builds)[1])
 			        	break;
+					case '10':
+						builds.updateItemValue(2, 'gens', {
+							wood: get(builds)[2]['gens']['wood']*2.30
+						});
+						builds.updateItemValue(2, 'gens', {
+							sand: get(builds)[2]['gens']['sand']*2
+						})
 			      	default:
 			        	break;
 	    		}
@@ -151,7 +190,7 @@ export const science = scienceCreator({
 		bonuses: [
 			{label: 'Study science cap: ', val: '+150'},
 			{label: 'Study science production: ', val: '+30%'},
-			{label: 'Sand Nets wood production: ', val: '+150%'},
+			{label: 'Sand Nets wood production: ', val: '+50%'},
 		],
 		researched: false,
 		available: false,
@@ -162,7 +201,7 @@ export const science = scienceCreator({
 		name: 'Writing',
 		description: 'Without a codified writing system, progress will slow to a halt. Writing not only increases internal productivity, but allows contact with others who may want to experience turtle civilization.',
 		costs: {
-			science: 325
+			science: 250
 		},
 		researched: false,
 		available: false,
@@ -173,7 +212,7 @@ export const science = scienceCreator({
 		name: 'Taming',
 		description: 'Your turtles have learned a way to domesticate their prey instead of eating it.',
 		costs: {
-			science: 500
+			science: 350
 		},
 		researched: false,
 		available: false,
@@ -184,7 +223,7 @@ export const science = scienceCreator({
 		name: 'Recordkeeping',
 		description: 'Recordkeeping opens a wide door to turtle civilization, including specialized labor.',
 		costs: {
-			science: 750
+			science: 500
 		},
 		researched: false,
 		available: false,
@@ -195,7 +234,7 @@ export const science = scienceCreator({
 		name: 'Heat',
 		description: 'Wielding heat in harsh underwater conditions is crucial for wielding newly discovered metals.',
 		costs: {
-			science: 750
+			science: 500
 		},
 		researched: false,
 		available: false,
@@ -218,7 +257,7 @@ export const science = scienceCreator({
 		name: 'Agriculture',
 		description: 'Agriculture allows for large-scale and organized farming.',
 		costs: {
-			science: 1200
+			science: 800
 		},
 		researched: false,
 		available: false,
@@ -227,10 +266,14 @@ export const science = scienceCreator({
 	'10': {
 		id: 10,
 		name: 'Basic Mathematics',
-		description: 'Numeric competency is required for advanced architectural and scientific pursuits.',
+		description: 'Numeric competency is required for advanced architectural and scientific pursuits. Turtles can use this to dramatically improve their sand nets.',
 		costs: {
-			science: 1200
+			science: 800
 		},
+		bonuses: [
+			{label: 'Sand Nets sand production: ', val: '+100%'},
+			{label: 'Sand Nets wood production: ', val: '+130%'},
+		],
 		researched: false,
 		available: false,
 		criteria: [6]
@@ -240,11 +283,22 @@ export const science = scienceCreator({
 		name: 'Astronomy',
 		description: 'Studying the stars isn\'t just for horoscopes; turtles can use the night sky for a variety of purposes.',
 		costs: {
-			science: 2000
+			science: 1200
 		},
 		researched: false,
 		available: false,
 		criteria: [6,9]
+	},
+	'12': {
+		id: 12,
+		name: 'Government',
+		description: 'A formal, centralized power opens up endless pathways to future improvements. Unlocks many new upgrades.',
+		costs: {
+			science: 2500
+		},
+		researched: false,
+		available: false,
+		criteria: [6]
 	},
 
 })
@@ -298,7 +352,7 @@ export const baseScience = scienceCreator({
 		bonuses: [
 			{label: 'Study science cap: ', val: '+150'},
 			{label: 'Study science production: ', val: '+30%'},
-			{label: 'Sand Nets wood production: ', val: '+150%'},
+			{label: 'Sand Nets wood production: ', val: '+50%'},
 		],
 		researched: false,
 		available: false,
@@ -309,7 +363,7 @@ export const baseScience = scienceCreator({
 		name: 'Writing',
 		description: 'Without a codified writing system, progress will slow to a halt. Writing not only increases internal productivity, but allows contact with others who may want to experience turtle civilization.',
 		costs: {
-			science: 325
+			science: 250
 		},
 		researched: false,
 		available: false,
@@ -320,7 +374,7 @@ export const baseScience = scienceCreator({
 		name: 'Taming',
 		description: 'Your turtles have learned a way to domesticate their prey instead of eating it.',
 		costs: {
-			science: 500
+			science: 350
 		},
 		researched: false,
 		available: false,
@@ -331,7 +385,7 @@ export const baseScience = scienceCreator({
 		name: 'Recordkeeping',
 		description: 'Recordkeeping opens a wide door to turtle civilization, including specialized labor.',
 		costs: {
-			science: 750
+			science: 500
 		},
 		researched: false,
 		available: false,
@@ -342,7 +396,7 @@ export const baseScience = scienceCreator({
 		name: 'Heat',
 		description: 'Wielding heat in harsh underwater conditions is crucial for wielding newly discovered metals.',
 		costs: {
-			science: 750
+			science: 500
 		},
 		researched: false,
 		available: false,
@@ -365,7 +419,7 @@ export const baseScience = scienceCreator({
 		name: 'Agriculture',
 		description: 'Agriculture allows for large-scale and organized farming.',
 		costs: {
-			science: 1200
+			science: 800
 		},
 		researched: false,
 		available: false,
@@ -374,10 +428,14 @@ export const baseScience = scienceCreator({
 	'10': {
 		id: 10,
 		name: 'Basic Mathematics',
-		description: 'Numeric competency is required for advanced architectural and scientific pursuits.',
+		description: 'Numeric competency is required for advanced architectural and scientific pursuits. Turtles can use this to dramatically improve their sand nets.',
 		costs: {
-			science: 1200
+			science: 800
 		},
+		bonuses: [
+			{label: 'Sand Nets sand production: ', val: '+100%'},
+			{label: 'Sand Nets wood production: ', val: '+130%'},
+		],
 		researched: false,
 		available: false,
 		criteria: [6]
@@ -387,13 +445,26 @@ export const baseScience = scienceCreator({
 		name: 'Astronomy',
 		description: 'Studying the stars isn\'t just for horoscopes; turtles can use the night sky for a variety of purposes.',
 		costs: {
-			science: 2000
+			science: 1200
 		},
 		researched: false,
 		available: false,
 		criteria: [6,9]
 	},
+	'12': {
+		id: 12,
+		name: 'Government',
+		description: 'A formal, centralized power opens up endless pathways to future improvements. Unlocks many new upgrades.',
+		costs: {
+			science: 2500
+		},
+		researched: false,
+		available: false,
+		criteria: [6]
+	},
 
 })
+
+
 
 

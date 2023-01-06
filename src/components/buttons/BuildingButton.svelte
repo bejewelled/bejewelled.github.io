@@ -1,4 +1,6 @@
-<div class=' grid grid-cols-8 '>
+<div class=' grid grid-cols-12 '>
+<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div 
      on:mouseover={() => getCostText({id})} 
      on:mouseover={() => getHeaderText({id})}
@@ -8,16 +10,16 @@
      on:mouseout={() => destroyUpdateInterval({id})} 
      on:click={() => buy({id})}
      class='has-tooltip gameText py-1 items-center text-center border-solid ml-1 mr-1
-     {affordStyle} {toggleableBuild ? 'border-l-green-500 col-span-6' : 'col-span-8'}
+     {affordStyle} {toggleableBuild ? 'border-l-green-500 col-span-8' : 'col-span-12'}
      select-none'>{text}
-              <span class='w-[215px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
+              <span class='w-[250px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
               <div class='grid grid-flow-dense grid-rows items-baseline'>
               {#each tooltipText as line}
               <div class="row">
-                <div class='grid items-start grid-cols-5'>
+                <div class='grid items-start grid-cols-5 text-small'>
                 <div class="col-span-1 items-start text-left
                 {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.val}</div>
                  <div class="col-span-4 text-right pr-1
@@ -28,8 +30,8 @@
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>              
               {#each producerText as line}
               <div class="row grid-rows-1 items-baseline">
-                <div class='grid text-small-gray grid-cols-3'>
-                 <div class="col-span-1 text-left">{line.val}</div>
+                <div class='grid text-small-gray grid-cols-4'>
+                 <div class="col-span-2 text-left">{line.val}</div>
                  <div class="col-span-2 text-left">{line.text}</div>
               </div>
             </div>
@@ -46,8 +48,8 @@
            on:mouseover={() => createUpdateInterval({id})} 
            on:mouseout={() => destroyUpdateInterval({id})} 
            on:click={() => changeToggleAmt({id}, 1)}
-           class='has-tooltip mainText col-span-1 items-center text-center border-solid ml-1 p-1 mr-1
-           {toggleAffordStyle} select-none'>+
+           class='has-tooltip mainText col-span-2 items-center text-center border-solid ml-1 p-1 mr-1
+           {lockoutStyle} select-none'>+
            <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
               <div 
               on:click={() => changeToggleAmt({id}, +5)}
@@ -66,8 +68,8 @@
            on:mouseover={() => createUpdateInterval({id})} 
            on:mouseout={() => destroyUpdateInterval({id})} 
            on:click={() => changeToggleAmt({id}, -1)}
-           class='has-tooltip mainText col-span-1 items-center text-center border-solid ml-1 p-1 mr-1
-           {toggleAffordStyle} select-none'>-
+           class='has-tooltip mainText col-span-2 items-center text-center border-solid ml-1 p-1 mr-1
+           {lockoutStyle} select-none'>-
            <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
               <div 
               on:click={() => changeToggleAmt({id}, -5)}
@@ -86,9 +88,11 @@
 
 
 <script>
-  import { res } from '../data/player.js';
-  import { builds, allGens, allBonuses, buildCounts } from '../data/buildings.js';
-  import  fm  from '../calcs/formulas.js'
+// @ts-nocheck
+
+  import { res } from '../../data/player.js';
+  import { builds, allGens, allBonuses, buildCounts, allSubtracts, resDeltas } from '../../data/buildings.js';
+  import  fm  from '../../calcs/formulas.js'
   import {get} from 'svelte/store'
   import {onMount, onDestroy} from 'svelte'
 
@@ -101,6 +105,7 @@
   let affordStyle;
   let toggleAffordStyle;
   let toggleableBuild = get(builds)[id]['toggleable'];
+  let lockoutStyle;
 
   const decround = (n, places) => {
     if (n < 1e3) return n.toLocaleString();
@@ -119,6 +124,7 @@
     affordStyleInterval = setInterval(() => {
       getAffordStyle(id);
       getToggleAffordStyle(id);
+      getLockoutStyle(id);
     }, 600);
   })
 
@@ -161,9 +167,15 @@
     getProducerText(bid);
     getAffordStyle(bid.id);
     allGens.updateAll();
+    allSubtracts.updateAll();
     allBonuses.updateAll();
+    resDeltas.updateAll();
   }
 
+  /**
+	 * @param {{ id: any; }} bid
+	 * @param {number} amt
+	 */
   function changeToggleAmt(bid, amt) {
     if (amt >= 0) {
       buildCounts.changeToggle(bid.id, amt);
@@ -200,7 +212,7 @@
       let ratio = get(builds)[bid]['ratio']
       let count = get(buildCounts)[bid][0]
       let req = fm.geomSequenceSum(val,ratio, count);
-      if (get(res)[type][1] < req) {
+      if (get(res)[type][1] < req && get(res)[type][1] > -1) {
         affordStyle = 'game-btn-nostorage';
         return;
       } else if (get(res)[type][0] < req) {
@@ -234,13 +246,13 @@
       let req = fm.geomSequenceSum(val,ratio, count)
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
-      if (req > get(res)[type][1]) {
+      if (req > get(res)[type][1] && get(res)[type][1] > -1) {
         txt = txt + "*"
       }
       if (get(res)[type][0] < req) {
         let remain = req - have;
         // in seconds vv
-        let timeRemain = Math.round(remain / (5*get(allGens)[type]));
+        let timeRemain = Math.round(remain / (5*get(resDeltas)[type]));
         let timeText = (get(allGens)[type] != 0 ? formatToTime(timeRemain) : 'inf');
         txt += " (" + timeText + ")"
         list.push({
@@ -261,6 +273,14 @@
 
   function getProducerText(bid) {
     let list = []
+    for (let [type, val] of Object.entries(get(builds)[bid.id]['subtracts'])) {
+        let txt = (val > 0 ? '-' : '') + decround(val*5, 3).toString() + " / sec" 
+        list.push({
+          type: 'afford',
+          val: type,
+          text: txt
+        });
+    }
     for (let [type, val] of Object.entries(get(builds)[bid.id]['gens'])) {
         let txt = (val > 0 ? '+' : '') + decround(val*5, 3).toString() + " / sec" 
         list.push({
@@ -291,16 +311,22 @@
     }
     producerText = list;
   }
+
+  function getLockoutStyle(bid) {
+    for (let [type, val] of Object.entries(get(builds)[bid]['subtracts'])) {
+        if (get(res)[type][3] == 1) {
+          lockoutStyle = 'game-btn bg-orange-400/[0.65]';
+          return;
+        }
+    }
+    lockoutStyle = 'game-btn'
+  }
 // all code logic
 </script>
 
 
 
 <style>
-  .text-small-gray {
-    font-size: 9px;
-    color: gray;
-  }
   .tooltip {
     @apply invisible absolute;
   }

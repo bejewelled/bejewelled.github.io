@@ -1,6 +1,6 @@
 <div class='container'>
 	<div class='grid mainText row header-bar h-[3px] p-1'>
-		<div class='grid grid-cols-12 items-start'>
+		<div class='grid grid-cols-[16_/_span_16] items-start pb-2'>
 			<div class='col-span-3'>
 					<div class='flex flex-row'>
 						<div class='flex'>
@@ -16,101 +16,131 @@
 			</div>
 		</div>
 	</div>
-		<div class="grid row items-start grid-cols-12 p-3">
+		<div class="grid row items-start grid-cols-12 p-2 mt-3">
 
 				<!-- Resource Displays -->
-				<div class='p-1 col-span-3'>
-					<div class='grid grid-rows-12 items-start'>
-						<div class='grid grid-cols-12 items-start'>
+			<div class='p-1 col-span-4'>
+				<div class='grid grid-rows-12 items-start'>
+					<div class='grid grid-cols-12 items-start'>
 
 
-			{#each currRes as res}
-				{#if res[1][0] > 0}
-						<div class="col-span-4 mainText">
-						<span class="{colors[res[0]] || colors['default']}">{res[0]}
-						</span></div>	
-						<div class='col-span-5 text-left mainText'>
-							<span
-							class='{res[1][0] > res[1][1]*0.9997 && res[1][1] >= 0 ? "text-rose-400" : 
-							res[1][0] > res[1][1]*0.85 && res[1][1] >= 0 ? "text-orange-400" : "text-white"}'>{round(res[1][0], 3)}
-							</span>
-							{#if res[1][1] > -0.9}
-						 	<span class='gameTextWhite'> / {round(res[1][1], 3)}</span>
-						 	{/if}
-						</div>
-
-					<div class='col-span-3 text-left mainText gameTextWhite 
-					has-tooltip mainText select-none'>
-					{#if !($allGens[res[0]] === undefined) && $allGens[res[0]] > 0}
-						{#if $allGens[res[0]] >= 0}+{:else}-{/if}
-						{#if Math.abs($allGens[res[0]]) >= 0.0000199}
-							{round($allGens[res[0]]*5*(1+$allBonuses[res[0]]/100 || 1), 3)} / sec
-						{:else}
-							... / sec
-						{/if}
-					{/if}
-
-
-							<!-- production tooltip -->
-	            <span class='w-[160px] 
-	            grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
-				        <div class='grid row grid-cols-12 items-start pb-1'>
-									<span class='col-span-7 text-left'>
-										Production: 
-									</span>
-									<span class='col-span-5 text-left'>
-										{#if $allGens[res[0]] > -0.0003}+{:else}-{/if}
-										{round($allGens[res[0]]*5, 3)} / sec
-									</span>
-								</div>
-								<!-- add bonuses to tooltip, if applicable -->
-								{#if $allBonuses[res[0]] > 0.0003}
-				        <div class='grid row grid-cols-12 items-start pb-1'>
-									<span class='col-span-7 text-left'>
-										Bonuses: 
-									</span>
-									<span class='col-span-5 text-left'>
-										{#if $allBonuses[res[0]] > -0.0003}+{:else}-{/if}
-										{round($allBonuses[res[0]], 3)}%
-									</span>
-								</div>
+				{#each currRes as res}
+					{#if $totalRes[res[0]][0] > 0}
+							<div class="col-span-4 mainText">
+							<span class="{colors[res[0]] || colors['default']}">{res[0]}
+							</span></div>	
+							<div class='col-span-5 text-left mainText'>
+								<span
+								class='{res[1][0] > res[1][1]*0.9997 && res[1][1] >= 0 ? "text-rose-400" : 
+								res[1][0] > res[1][1]*0.85 && res[1][1] >= 0 ? "text-orange-400" : "text-white"}'>{round(res[1][0], 3)}
+								</span>
+								{#if res[1][1] > -0.9}
+								<span class='gameTextWhite'> / {round(res[1][1], 3)}</span>
 								{/if}
-								{#if res[1][1] > 0}
-								<hr/>
-				            	<div class='grid row grid-cols-12 pt-1 text-left'>							
-					              	<span class='col-span-7'>Time until cap: </span>
-					              	<span 
-					              	class='col-span-5 text-left {timeToCap(res) <= 0.0003 ? "text-rose-400" : 
-					              	timeToCap(res) <= 120 ? "text-orange-400" : "text-white"}'>
-					              	{fm.formatToTime(Math.round((res[1][1] - res[1][0]) / (5*$allGens[res[0]])))}
-					              	</span>
-				           	 	</div>
-				        {/if}
-				            </span>
-	            	</div>
-						{/if}	
-			{/each}
+							</div>
+						
+						<div class='col-span-3 text-left mainText gameTextWhite 
+						has-tooltip mainText select-none'>
+						{#if !($allGens[res[0]] === undefined) && $allGens[res[0]] > 0}
+							{#if $resDeltas[res[0]] >= 0}+{/if}
+							{#if Math.abs($resDeltas[res[0]]) >= 0.0000199}
+								{round($resDeltas[res[0]]*5)} / sec
+							{:else}
+								... / sec
+							{/if}
+						{/if}
 
+
+					<!-- production tooltip -->
+					<span class='w-[max-width-270px] text-small
+					grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
+							<div class='grid row grid-cols-12 items-start pb-1'>
+										<span class='col-span-7 text-left'>
+											Production: 
+										</span>
+										<span class='col-span-5 text-right pr-1'>
+											{#if $allGens[res[0]] > -0.0003}+{:else}-{/if}
+											{round($allGens[res[0]]*5, 3)} / sec
+										</span>
+									</div>
+									<!-- add bonuses to tooltip, if applicable -->
+									{#if $allBonuses[res[0]] > 0.0003}
+							<div class='grid row grid-cols-12 items-start pb-1'>
+										<span class='col-span-7 text-left'>
+											Bonuses: 
+										</span>
+										<span class='col-span-5 text-right pr-1'>
+											{#if $allBonuses[res[0]] > -0.0003}+{:else}{/if}
+											{round($allBonuses[res[0]], 3)}%
+										</span>
+									</div>
+									{/if}
+									<!-- add subtractions to tooltip, if applicable -->
+									{#if $allSubtracts[res[0]] > 0.0003}
+							<div class='grid row grid-cols-12 items-start pb-1'>
+										<span class='col-span-7 text-left'>
+											Consumption: 
+										</span>
+										<span class='col-span-5 text-right pr-1'>
+											{#if $allSubtracts[res[0]] > -0.0003}-{:else}{/if}
+											{round($allSubtracts[res[0]]*5, 3)} / sec
+										</span>
+									</div>
+									{/if}
+									{#if res[1][1] > 0}
+										<hr/>
+										{#if $resDeltas[res[0]] >= 0}
+										<div class='grid row grid-cols-12 pt-1 text-left'>							
+											<span class='col-span-7'>Time until cap: &nbsp; </span>
+											<span 
+											class='col-span-5 pr-1 text-right {timeToCap(res) <= 0.0003 ? "text-rose-400" : 
+											timeToCap(res) <= 120 ? "text-orange-400" : "text-white"}'>
+											{fm.formatToTime(Math.round((res[1][1] - res[1][0]) / (5*$resDeltas[res[0]])))}
+											</span>
+										</div>
+										{:else}
+										<div class='grid row grid-cols-12 pt-1 text-left'>							
+											<span class='col-span-7'>Time until zero: &nbsp; </span>
+											<span 
+											class='col-span-5 text-right {timeToCap(res) <= 0.0003 ? "text-rose-400" : 
+											timeToCap(res) <= 120 ? "text-orange-400" : "text-white"}'>
+											{fm.formatToTime(Math.round(Math.abs((res[1][0]) / (5*$resDeltas[res[0]]))))}
+											</span>
+										</div>
+										{/if}
+									{/if}
+								</span>
 						</div>
+							{/if}	
+				{/each}
+
 					</div>
 				</div>
+			</div>
 
 				<!-- Game Tab Buttons go here -->
-				<div class='p-4 col-span-5 items-start'>
+			<div class='p-4 col-span-5 items-start mb-12'>
+				<div class='wrapper mt-2'>
 					<div class='flex flex-row'>
-						<div class='flex'>
-							<TabButton on:click={() => changeTab('main')} text='Buildings'/>
-						</div>
-					{#if $res['science'][0] > 0.01}
-						<div class='flex'>
-							<TabButton on:click={() => changeTab('science')} text='Science'/>
-						</div>
-					{/if}
-					{#if $res['fame'][0] > 0.01}
-						<div class='flex'>
-							<TabButton on:click={() => changeTab('fame')} text='Fame'/>
-						</div>
-					{/if}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('main')} text='Buildings'/>
+							</div>
+						{#if $totalRes['science'][0] > 0.01}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('science')} text='Science'/>
+							</div>
+						{/if}
+						{#if $totalRes['fame'][0] > 0.01}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('fame')} text='Fame'/>
+							</div>
+						{/if}
+						{#if $totalRes['glory'] > 10}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
+							</div>
+						{/if}
+					</div>
 				</div>
 
 				<!-- Game Tab Content goes here -->
@@ -154,6 +184,22 @@
 					{/each}
 				{/if}
 
+				{#if activeTab == 'policy'}
+				<label>
+					<input type=checkbox bind:checked={showUnlockedPolicy}>
+					<span class='gameTextWhite select-none'>Show already researched policies</span>
+				</label>
+					{#each {length: numPolicy} as _, i}
+						{#if (!($policy[i]['researched']) || showUnlockedPolicy) && $policy[i]['available']}
+					<div class='p-2 grid'>
+						<div class='row'>
+							<PolicyButton id={i} class='p-1'/>
+						</div> 
+					</div> 
+					{/if}
+					{/each}
+				{/if}
+
 				{#if activeTab == 'fame'}
 					<div class='p-2'>
 					</div>
@@ -161,38 +207,74 @@
 						<div class='row'>
 							<FameBankButton class='p-1'/>
 						</div> 
+					</div>
+					<br/>
+					<div>
+						<div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+  						<div class="mainText progbar-fame bg-orange-400 h-2.5 rounded-full" style="width: {$res.glory[0] / gloryNextLevelTarget * 100}% "></div>
+						</div>
 					</div> 
+					<div class='text-center gameTextWhite mainText'>You are glory level <strong>{$fameTab['gloryLevel']}</strong></div>
+					<div class='text-center gameTextWhite'>You need {round(gloryNextLevelTarget - $res.glory[0]
+					)} glory to reach the next level.</div>
+					<div class='p-1 text-center mainText gameTextWhite'>Your glory level grants +{round(fm.calcGloryBonusProduction($fameTab['gloryLevel']) * 100)}% to all production.</div>
+					<div class='p-3'> <hr/> </div>
+					<!--  Use a for loop when the quest backend is finished  -->
+					{#each $jobs as job}
+					<div class='grid grid-cols-12'>
+						<div class='col-span-4 pr-3'> <QuestSubmitButton index={job['index']} /> </div>
+					{#if !job['cooldown']}
+						<div class='col-span-1 p-1 text-vert-center text-left gameTextWhite mainText'>  Cost:</div>
+						<div class='col-span-4 p-1 text-vert-center text-right gameTextWhite mainText'>  {round(job['amount'])} {job['type']}</div>
+						<div class='col-span-3 p-1 text-vert-center text-right text-amber-300 mainText'>+{job['reward']} Glory</div>
+					
+					{:else}
+					<div class='col-span-8 p-1 text-vert-center text-right gameTextWhite mainText'>  You have recently completed this job.</div>
+					{/if}
+					<div class='p-1'></div>
+					</div>
+					{/each}
 				{/if}
 
-
-				<div class='col-span-4'></div>
 			</div>
 		</div>
 </div>
 
 
 <script>
-	import BuildingButton from '../components/BuildingButton.svelte';
-	import ScienceButton from '../components/ScienceButton.svelte';
-	import ClickButton from '../components/ClickButton.svelte';
-	import SaveLoadButton from '../components/SaveLoadButton.svelte';
-	import TabButton from '../components/TabButton.svelte';
-	import FameBankButton from '../components/FameBankButton.svelte';
-	import { res, baseRes, gloryBonuses } from '../data/player.js';
-	import { builds, allGens, allBonuses, buildCounts, baseBuilds, baseAllGens, baseBuildCounts } from '../data/buildings.js';
+// @ts-nocheck
+
+	import BuildingButton from '../components/buttons/BuildingButton.svelte';
+	import ScienceButton from '../components/buttons/ScienceButton.svelte';
+	import ClickButton from '../components/buttons/ClickButton.svelte';
+	import SaveLoadButton from '../components/buttons/SaveLoadButton.svelte';
+	import TabButton from '../components/buttons/TabButton.svelte';
+	import PolicyButton from '../components/buttons/PolicyButton.svelte'
+	import FameBankButton from '../components/buttons/FameBankButton.svelte';
+	import QuestSubmitButton from '../components/buttons/QuestSubmitButton.svelte';
+	import { res, baseRes, gloryBonuses, totalRes, fameTab } from '../data/player.js';
+	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseBuilds, baseAllGens, baseBuildCounts } from '../data/buildings.js';
 	import { science, baseScience } from '../data/science.js';
+	import {jobs} from '../data/jobs.js'
+	import { policy, basePolicy } from '../data/policy';
 	import {onMount, onDestroy} from 'svelte';
 	import {get} from 'svelte/store'
 	import fm from '../calcs/formulas.js'
 
+	// REACTIVE_VARS
 	$: numBuildings = Object.entries(get(builds)).length;
 	$: numScience = Object.entries(get(science)).length;
+	$: numPolicy = Object.entries(get(policy)).length;
 	let saveInterval;
 	let checkResUnlockInterval;
 	$: currRes = Object.entries(get(res));
 	$: gloryBuffs = Object.entries(get(gloryBonuses));
 
+	let gloryVal = get(res)['glory'][0]
+
 	// sets display color for the resource name
+	// good as a reference for other sections
+	// RES_COLORS
 	let colors = {
 		default: 'text-white',
 		kelp: 'text-white',
@@ -205,15 +287,23 @@
 		science: 'text-sky-500'
 	}
 
-
+	// NONREACTIVE_VARS
 	let activeTab = 'main';
 	let showUnlockedSciences = false;
+	let showUnlockedPolicy;
 	let getLength = ((obj) => {
 		return Object.keys(obj).length;
 	});
 	let timeToCap = ((res) => {
 		return Math.round((res[1][1] - res[1][0]) / (5*get(allGens)[res[0]]))
 	});
+
+	// glory amount required for the next level
+	let findGloryNextTarget = (lv) => (Math.floor(Math.pow(1.1, lv) 
+		* 10 * Math.pow(lv,4) * 0.01) / 0.01)
+
+	let gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel']) 
+	console.log(gloryNextLevelTarget)
 
 	// number rounder. Use 3 decimals as default
 	// add more when needed (like thousands, etc)
@@ -245,19 +335,32 @@
 
 	onMount(() => {
 
+		jobs.addJob(0);
+		jobs.addJob(1);
+		jobs.addJob(2);
+		jobs.addJob(3);
+		jobs.addJob(4);
+		jobs.remJob(0);
+		jobs.remJob(1);
+		jobs.remJob(2);
+		jobs.remJob(3);
+		jobs.remJob(4);
+
 		// init build count list
 		buildCounts.init(100);
 
 		// fix base buildings/science loadouts if there is a discrepancy
 		//baseBuilds.setSelf(get(builds));
 		//baseScience.setSelf(get(science));
-		console.log(get(baseBuilds));
 		// if there is save data, load it
 		if (localStorage.getItem('data') !== null) {
 			load();
 			// adds new content, if needed
 			fixContent();
 			allGens.updateAll();
+			allSubtracts.updateAll();
+			allBonuses.updateAll();
+			resDeltas.updateAll();
 		}
 
 		// start main game loop
@@ -268,28 +371,42 @@
 		});
 
 		// main game loop
+		// NOTE: only add things to this loop that MUST be updated each tick
 		setInterval(function gameLoop() {
 			rid = requestAnimationFrame(function update() {
 				let now = performance.now()
 			  	const delta = now - lastTick
 			  	lastTick = now
 			  	currRes = Object.entries(get(res));
-
-			  	addRes(50*delta/200);
+			  	addRes(100*delta/200);
 			});
 		}, 200);
 
-//		save every 30s (this time doesn't have to be accurate so don't need to use dt)
+		// save every 30s (this time doesn't have to be accurate so don't need to use dt)
 		saveInterval = setInterval(function savegame() {
 			save();
 		}, 30000);
 
+		// secondary loop
+		// put most functional, non-visual items here (checking unlocks, levelups, quests etc.)
 		// check for new unlocks every second
 		checkResUnlockInterval = setInterval(() => { 
 			builds.checkSciCriteria();
+			// level up if player has enough glory for the next level
+			if (get(res)['glory'][0] >= gloryNextLevelTarget) {
+				fameTab.add('gloryLevel', 1);
+				res.sub('glory', gloryNextLevelTarget)
+				gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel'] + 1)
+			}
 			for (let c in Object.entries(get(builds))) {
-      	builds.checkResUnlockThreshold(c[0]);
+      		builds.checkResUnlockThreshold(c);
     	}
+
+    	jobs.renew();
+
+    	// CONSOLE_TEST
+
+
     }, 1000)
 
 		// unlock buildings that need to be unlocked
@@ -318,6 +435,13 @@
 		for (let [id, baseVal] of Object.entries(get(baseScience))) {
 				if (existingSci[id] === undefined) {
 					science.addNew(id, baseVal)
+				} else {
+					for (let key of 
+				['id', 'name', 'description', 'costs', 'bonuses', 'criteria']) {
+						if (existingSci[id][key] != baseVal[key]) {
+							science.setItemVal(id, key, baseVal[key])
+						}
+				}
 				}
 		}
 		for (let [id, obj] of Object.entries(get(science))) {
@@ -325,13 +449,39 @@
 					science.unlock(id);
 				}
 		}
+		let existingPolicy = get(policy);
+		policy.setSelf(get(basePolicy));
+		//console.log(existingSci);
+		// baseScience.getSelf();
+		// const newSci = get(baseScience);
+		// //console.log(newSci);
+		for (let [id, baseVal] of Object.entries(get(basePolicy))) {
+				if (existingPolicy[id] === undefined) {
+					science.addNew(id, baseVal)
+				} else {
+					for (let key of 
+				['id', 'name', 'description', 'costs', 'bonuses', 'criteria']) {
+						if (existingPolicy[id][key] != baseVal[key]) {
+							policy.setItemVal(id, key, baseVal[key])
+						}
+				}
+				}
+		}
+		for (let [id, obj] of Object.entries(get(science))) {
+				if (!(existingPolicy[id] === undefined) && existingPolicy[id]['researched'] == true) {
+					policy.unlock(id);
+				}
+		}
 		builds.checkSciCriteria();
 		allGens.updateAll();
+		allSubtracts.updateAll();
 		allBonuses.updateAll();
+		resDeltas.updateAll();
 		science.checkCriteria();
+		policy.checkCriteria();
 		for (let id of Object.entries(get(science))) {
 			if (id[1]['researched']) {
-				science.updateSpecialCase(id[0]);
+				science.updateSpecialCase(id[0], true); // update special cases, but don't double-add
 			}
 		}
 	}
@@ -344,25 +494,22 @@
 
 	let counter = 0;
 	function addRes(delta) {
-		let basegens = get(allGens);
-		let bonuses = get(allBonuses);
-		for (let k in basegens) {
-			// if (!(bonuses[k] === undefined)) {
-			// 	basegens[k] *= (1 + bonuses[k]/100);
-			// }
-		}
-		res.addMany(basegens, delta);
-		basegens = get(allGens);
+		res.addMany(get(resDeltas), delta);
+		totalRes.addMany(get(resDeltas), delta, false, true);
 		counter++;
 		if (counter > 5) {
 			counter = 0;
 			allGens.updateAll();
+			allSubtracts.updateAll();
 			allBonuses.updateAll();
+			resDeltas.updateAll();
 		}
   }
 
+
 	function kelpClick() {
 		res.add('kelp', 1);
+		totalRes.add('kelp', 1);
 	}
 
 	function save() {
@@ -373,10 +520,14 @@
 		// const savegens = get(allGens);
 		let savestr = {}
 		savestr['res'] = get(res);
+		savestr['totalRes'] = get(res);
 		savestr['builds'] = get(builds);
 		savestr['buildCounts'] = get(buildCounts);
 		savestr['allGens'] = get(allGens);
+		savestr['allSubtracts'] = get(allSubtracts);
+		savestr['resDeltas'] = get(resDeltas)
 		savestr['science'] = get(science);
+		savestr['policy'] = get(policy);
 		savestr = btoa(JSON.stringify(savestr));
 		localStorage.setItem('data', savestr);
 	}
@@ -384,14 +535,20 @@
 	function load() {
 		const savestr = JSON.parse(atob(localStorage.getItem('data')));
 		// const savedata = savestr.split("} ")
-		res.setSelf(savestr['res']);
-		builds.setSelf(savestr['builds']);
-		buildCounts.setSelf(savestr['buildCounts']);
-		science.setSelf(savestr['science']);
+		res.setSelf(savestr['res'] || get(baseRes));
+		totalRes.setSelf(savestr['totalRes'] || get(totalRes));
+		builds.setSelf(savestr['builds'] || get(baseBuilds));
+		console.log(get(builds))
+		science.setSelf(savestr['science'] || get(baseScience));
+		buildCounts.setSelf(savestr['buildCounts'] || get(baseBuildCounts));
+		policy.setSelf(savestr['policy'] || get(basePolicy));
 		allGens.updateAll();
+		allSubtracts.updateAll();
 		allBonuses.updateAll();
+		resDeltas.updateAll();
 		builds.checkSciCriteria();
 		science.checkCriteria();
+		policy.checkCriteria();
 	}
 
 	// this will apply all science bonuses from any researched sciences
@@ -405,7 +562,7 @@
 
 	function reset() {
 	 	let confLeft = 5;
-	 	if (!confirm("ARE YOU SURE you want to reset? This is a HARD reset and will clear everything!")) {
+	 	if (!confirm("ARE YOU SURE you want to reset? This is a HARD reset and will clear everything! (Additional confirmation required after this)")) {
 	 		return;
 	 	}
 	 	let confText = prompt("Please type \"I want to reset the game.\" EXACTLY as shown (without quotes) to reset.");
@@ -428,7 +585,10 @@
 		science.lockAll();
 		science.checkCriteria();
 		activeTab = 'main';
-		allGens.updateAll();	
+		allGens.updateAll();
+		allSubtracts.updateAll();	
+		allBonuses.updateAll();
+		resDeltas.updateAll();
 		builds.hideAll();
 		save();
 	 }
@@ -440,28 +600,35 @@
 		background-color: #222529;
 	}
 	:global(.mainText) {
-		font-size: 10px;
+		font-size: 15px;
 	}
 	:global(.game-text-size) {
-		font-size: 10px;
+		font-size: 15px;
 	}
 	:global(.gameText) {
-		font-size: 10px;
+		font-size: 15px;
 	}
 	:global(.gameTextWhite) {
-		font-size: 10px;
+		font-size: 15px;
 		color: white;
 	}
+	:global(.text-small-white) {
+		font-size: 13px;
+		color: white;
+	}
+	:global(.text-small) {
+		font-size: 13px;
+	}
 	:global(.text-small-gray) {
-    font-size: 10px;
+    font-size: 13px;
     color: gray;
   }
   :global(.text-med-gray) {
-    font-size: 11px;
+    font-size: 14px;
     color: gray;
   }
   :global(.text-small-gray) {
-    font-size: 10px;
+    font-size: 12px;
     color: gray;
   }
  :global(.game-btn-noafford) {

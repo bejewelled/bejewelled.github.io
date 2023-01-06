@@ -15,24 +15,18 @@ export default class fm {
       text += Math.floor(t/60).toString() + "m "
       t -= 60*Math.floor(t/60);
     }
-    text += Math.round(t).toString() + "s"
+    text += Math.round(t).toString() + "s" 
     return text;
   }
 
-  static calcGloryBonusProduction(fame, type) {
-    if (fame < 1000) {
+  static calcGloryBonusProduction(lv) {
+    if (lv < 5) {
       return 0;
     } else {
-      return Math.pow((fame-1)/4, 0.575) 
+      return Math.pow(lv,2)/3600
     }
   }
 
-  static calcGloryCostRatioReduction(fame) {
-    if (fame < 50000) {
-      return 0;
-    } else {
-      return 12 - (13.4943 / Math.pow(fame, 0.03)) ;
-    }
-  }
+  // job difficulty is on a scale of 1 - 8
 
 }

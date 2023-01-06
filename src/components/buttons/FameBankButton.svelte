@@ -1,28 +1,7 @@
 
 <div on:click = {() => bank()}
 class='has-tooltip game-btn mainText p-1 items-center text-center 
-     {affordStyle} select-none'>Consume Fame
-              <span class='w-[215px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
-              <div class='text-white-500 mainText text-center'>{titleText}</div>
-              <div class='title text-small-gray items-start text-center'>{headerText}</div>
-              <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
-              <div class='contianer text-small-white'>
-              <span class=' select-none'>Bonuses from Glory </span>
-              <div class='pt-2 grid'>
-              {#if gloryBuffs[0][1] > 0.00003}
-              {#each gloryBuffs as gl}
-                {#if gl[1] > 0.00003}
-                <div class='row items-baseline'>
-                  <div class='grid grid-cols-4'>
-                    <div class='col-span-3 text-left'>{gl[0]}</div> <div class='col-span-1 text-baseline'>{decround(gl[1], 3)}%</div>
-                  </div>
-                </div>
-                {/if}             
-              {/each}
-              {:else}
-                <div class='row text-small-gray'>Perhaps your civilization needs more glory to reap its rewards.</div>
-              {/if}
-            </div>
+     {affordStyle} select-none'>Convert Fame to Glory
           </div>
               <!-- {#each tooltipText as line} -->
 <!--               <div class="row">
@@ -43,8 +22,6 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
             </div> 
               {/each}
               {/if}   -->        
-              </span>
-            </div>
 
 
 
@@ -52,17 +29,17 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
 	export let text;
   export let id;
   let titleText = 'Spread Fame';
-  let headerText = 'Use your success from previous turtle-tastic generations to help the next ones. Your turtles will gain glory, which gives increasingly powerful bonuses as more is accumulated.';
+  let headerText = 'Use your success from previous turtle-tastic generations to help the next ones. Your turtles will gain a very small amount of glory, which can be improved later.';
   let tooltipText = '';
   $: gloryBuffs = Object.entries(get(gloryBonuses));
   let affordStyle;
-  import { res, gloryBonuses } from '../data/player.js';
-  import { science } from '../data/science.js';
-  import {builds, buildCounts} from '../data/buildings.js';
-  import  fm  from '../calcs/formulas.js'
+  import { res, gloryBonuses } from '../../data/player.js';
+  import { science } from '../../data/science.js';
+  import {builds, buildCounts} from '../../data/buildings.js';
+  import  fm  from '../../calcs/formulas.js'
   import {get} from 'svelte/store'
   import {onMount, onDestroy} from 'svelte'
-  import {allGens} from '../data/buildings.js'
+  import {allGens} from '../../data/buildings.js'
 
   let decround  = ((i, places) => {
     let s = ''; // shortener
@@ -76,14 +53,11 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
   function bank() {
     let bankAmt = get(res)['fame'][0]
     res.set('fame', 0);
-    res.add('glory', bankAmt);
-    updateBonusesFromGlory();
+    // note: update the 1,000 if the ratio is changed over time
+    res.add('glory', bankAmt * 1);
+    totalRes.add('glory', bankAmt * 1);
   }
 
-  function updateBonusesFromGlory() {
-    gloryBonuses.set('Production Bonus', fm.calcGloryBonusProduction(get(res)['fame']));
-    gloryBonuses.set('Cost Ratio Reduction', fm.calcGloryCostRatioReduction(get(res)['fame']));
-  }
 
 
 </script>
