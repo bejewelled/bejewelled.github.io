@@ -9,7 +9,7 @@
      on:click={() => buy({id})}
      class='has-tooltip mainText p-1 items-center text-center 
      {affordStyle} select-none'>{titleText}
-              <span class='w-[250px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
+              <span class='w-[260px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
@@ -127,7 +127,7 @@
     let canAfford = true;
     for (let [type, val] of Object.entries(get(science)[bid]['costs'])) {
       let req = val;
-      if (get(res)[type][1] < req) {
+      if (get(res)[type][1] < req && get(res)[type][1] > 0) {
         affordStyle = 'game-btn-nostorage';
         return;
       } else if (get(res)[type][0] < req) {
@@ -178,7 +178,7 @@
       let req = val;
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
-      if (req > get(res)[type][1]) {
+      if (req > get(res)[type][1] && get(res)[type][1] > 0) {
         txt = txt + "*"
 
       }

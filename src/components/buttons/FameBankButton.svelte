@@ -33,7 +33,7 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
   let tooltipText = '';
   $: gloryBuffs = Object.entries(get(gloryBonuses));
   let affordStyle;
-  import { res, gloryBonuses } from '../../data/player.js';
+  import { res, totalRes, gloryBonuses } from '../../data/player.js';
   import { science } from '../../data/science.js';
   import {builds, buildCounts} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'

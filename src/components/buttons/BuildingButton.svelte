@@ -50,14 +50,14 @@
            on:click={() => changeToggleAmt({id}, 1)}
            class='has-tooltip mainText col-span-2 items-center text-center border-solid ml-1 p-1 mr-1
            {lockoutStyle} select-none'>+
-           <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
+          <!--  <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
               <div 
-              on:click={() => changeToggleAmt({id}, +5)}
+              on:click={() => changeToggleAmt({id}, 4)}
               class='text-med-gray game-btn'>+5</div>
               <div 
               on:click={() => changeToggleAmt({id}, $buildCounts[id])}
               class='title text-med-gray game-btn items-start text-center'>+all</div>
-          </span>
+          </span> -->
          </div>
 
          <div 
@@ -70,14 +70,14 @@
            on:click={() => changeToggleAmt({id}, -1)}
            class='has-tooltip mainText col-span-2 items-center text-center border-solid ml-1 p-1 mr-1
            {lockoutStyle} select-none'>-
-           <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
+<!--            <span class='w-[45px] tooltip shadow-lg p-1 border-white border bg-[#222529]'>
               <div 
-              on:click={() => changeToggleAmt({id}, -5)}
+              on:click={() => changeToggleAmt({id}, -4)}
               class='text-med-gray game-btn'>-5</div>
               <div 
-              on:click={() => changeToggleAmt({id}, -1*$buildCounts[id])}
+              on:click={() => changeToggleAmt({id}, $buildCounts[id][1]*-1)}
               class='title text-med-gray game-btn items-start text-center'>-all</div>
-          </span>
+          </span> -->
          </div>
 
 
@@ -176,11 +176,15 @@
 	 * @param {{ id: any; }} bid
 	 * @param {number} amt
 	 */
-  function changeToggleAmt(bid, amt) {
+  function changeToggleAmt(bid, amt, sign='+') {
     if (amt >= 0) {
       buildCounts.changeToggle(bid.id, amt);
+      console.log($buildCounts[bid.id])
+      allGens.updateAll();
     } else {
       buildCounts.changeToggle(bid.id, amt);
+      console.log($buildCounts[bid.id])
+      allGens.updateAll();
     }
   }
 
@@ -212,7 +216,7 @@
       let ratio = get(builds)[bid]['ratio']
       let count = get(buildCounts)[bid][0]
       let req = fm.geomSequenceSum(val,ratio, count);
-      if (get(res)[type][1] < req && get(res)[type][1] > -1) {
+      if (get(res)[type][1] < req && get(res)[type][1] > 0) {
         affordStyle = 'game-btn-nostorage';
         return;
       } else if (get(res)[type][0] < req) {
@@ -246,14 +250,15 @@
       let req = fm.geomSequenceSum(val,ratio, count)
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
-      if (req > get(res)[type][1] && get(res)[type][1] > -1) {
+      if (req > get(res)[type][1] && get(res)[type][1] > 0) {
+        console.log(get(res)['fame'][1])
         txt = txt + "*"
       }
       if (get(res)[type][0] < req) {
         let remain = req - have;
         // in seconds vv
         let timeRemain = Math.round(remain / (5*get(resDeltas)[type]));
-        let timeText = (get(allGens)[type] != 0 ? formatToTime(timeRemain) : 'inf');
+        let timeText = (get(allGens)[type] != 0 && !isNaN(timeRemain) ? formatToTime(timeRemain) : 'inf');
         txt += " (" + timeText + ")"
         list.push({
           type: 'noAfford',

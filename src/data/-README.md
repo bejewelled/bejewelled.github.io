@@ -23,6 +23,7 @@ glory
 8   Observatory
 9   Storehouse
 10  Town Hall
+11	Crypt
 
 **Science IDs**
 
@@ -39,6 +40,7 @@ glory
 10  Basic Mathematics
 11  Astronomy
 12  Government
+13	Crafting
 
 
 **Policy IDs**

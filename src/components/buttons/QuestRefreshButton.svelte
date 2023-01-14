@@ -1,10 +1,7 @@
 <div class='has-tooltip gameText py-1 items-center text-center border-solid ml-1 mr-1
      {affordStyle}
      select-none'
-     on:click={() => submit(index)} >{text}
-     {#if $jobs[index]['cooldown']}
-     <div class='bg-gray-400 items-center text-center"'style="width:{(1 - ($jobs[index]['nextTime'] - Date.now()) / $jobs[index]['initcd']) * 100}%"></div>
-     {/if}
+     on:click={() => refresh(index)} >🔄
 </div>
 
 
@@ -48,19 +45,8 @@
   })
 
 
-  function submit(index) { 
-    let type = get(jobs)[index]['type']
-    let amount = get(jobs)[index]['amount']
-    let reward = get(jobs)[index]['reward']
-
-    if (get(jobs)[index]['cooldown']) return;
-
-    if (get(res)[type][0] >= amount) {
-      res.sub(type, amount);
-      res.add('glory', reward);
-      jobs.remJob(index);
-    }
-
+  function refresh(index) { 
+    jobs.remJob(index);
   }
 
 

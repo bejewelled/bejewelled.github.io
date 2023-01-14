@@ -101,6 +101,9 @@ function scienceCreator(info) {
 				        builds.updateItemValue(2, 'caps', {
 				          copper: 100
 				        });     
+				     	if (!onLoad) {
+				        	res.addCap('science', 150 * get(buildCounts)[2][0]) 
+				        }
 				        allGens.updateAll();
 				        break;
 			      	case '3':
@@ -114,7 +117,7 @@ function scienceCreator(info) {
 				          wood: get(builds)[2]['gens']['wood']*1.5
 				        });
 				        if (!onLoad) {
-				        	res.addCap('science', 150 * get(buildCounts)[2][0]) // 2 as the ID for studies
+				        	res.addCap('science', 150 * get(buildCounts)[3][0]) // 3 as the ID for studies
 				        }
 				        allGens.updateAll();
 				        console.log(get(builds)[1])
@@ -300,6 +303,19 @@ export const science = scienceCreator({
 		available: false,
 		criteria: [6]
 	},
+	'13': {
+		id: 13,
+		name: 'Crafting',
+		description: 'More sophisticated materials can be made, enabling new structures.',
+		costs: {
+			science: 3500,
+			iron: 1500,
+			coal: 1000
+		},
+		researched: false,
+		available: false,
+		criteria: [10]
+	},
 
 })
 
@@ -462,6 +478,20 @@ export const baseScience = scienceCreator({
 		available: false,
 		criteria: [6]
 	},
+	'13': {
+		id: 13,
+		name: 'Crafting',
+		description: 'More sophisticated materials can be made, enabling new structures.',
+		costs: {
+			science: 3500,
+			iron: 1500,
+			coal: 1000
+		},
+		researched: false,
+		available: false,
+		criteria: [10]
+	},
+	
 
 })
 

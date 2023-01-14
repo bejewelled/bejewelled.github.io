@@ -2,7 +2,7 @@
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
 import { science, baseScience } from './science.js';
-import {res} from './player.js'
+import {res, fameTab, unlockedResources } from './player.js'
 import fm from '../calcs/formulas.js'
 import tb from '../calcs/tables.js'
 
@@ -24,31 +24,34 @@ function jobManager(info) {
 			return num;
 		},
 		jobComplete: (index) => info[index]['cooldown'],
+		// 8.68k - ignore
 		addJob(index) {
 			update(i => {
-				let possibleTypes = Object.keys(get(res))
+				let possibleTypes = [...get(unlockedResources)]
 				let choiceSuccess = false;
 				let type, difficulty;
 				while (!choiceSuccess) {
 					type = possibleTypes[Math.floor(Math.random() * possibleTypes.length)]
-					const diffTable = tb.jobDifficultyTable();
-					if (diffTable[type]) {
-						choiceSuccess = true;
-						difficulty = Math.round(diffTable[type])
-					}
+					if (type != 'glory' && type != 'fame') choiceSuccess = true;
 				}
-				// the amount of time (in seconds) worth of production required to complete
-				// minimum of 90 seconds (1.5m), maximum of 3,600 seconds (1h)
-				// times over 30m increase the difficulty
-				const time = 90 + Math.floor(Math.random() * 3510)
-				if (time > 300) difficulty++;
-				if (time > 900) difficulty++;
-				if (time > 1800) difficulty++;
-				if (time > 2700) difficulty++;
+				// effective difficulty
+				// calculated based on amount and rarity of resource required
+				let maxDiff = get(fameTab)['jobUpgrades'][1]['level'] + 4
+
 				
+				const diffTable = tb.jobDifficultyTable();
+				// if rarity of the resource > 1, takes that into account
+				// up to 64x (4^3) multiplier
+				const rarityMod = diffTable[type] || 1
+
+	
+				let time = 90 + Math.floor(Math.random() * (210 + 200*Math.min(rarityMod, maxDiff)))
+				const timeMod = Math.floor((time - 200) / 200);
+				difficulty = Math.floor(2*rarityMod + 0.8*effDiff);
 
 				const gtTemp = tb.difficultyGloryTable();
-				let reward = gtTemp[difficulty];
+				const rewardMulti = (3 * Math.pow(1.1, get(fameTab)['jobUpgrades'][1]['level']));
+				let reward = gtTemp[difficulty] * (rewardMulti * 2 * Math.pow(difficulty-1, 2) / 60.5);
 				let amount = (get(allGens)[type] || 400 * Math.pow(1.03, Math.max(8 - difficulty, 1))) * time 
 				i[index]['cooldown'] = false;
 				i[index]['type'] = type;
@@ -59,8 +62,9 @@ function jobManager(info) {
 			})
 		},
 		// puts the job on [cd] second cooldown
-		remJob(index, cd = 3) {
+		remJob(index) {
 			update(i => {
+				let cd = 600 * (Math.pow(0.95, get(fameTab)['jobUpgrades'][0]['level']))
 				i[index]['initcd'] = cd*1000;
 				i[index]['cooldown'] = true;
 				i[index]['nextTime'] = Date.now() + cd*1000
@@ -77,12 +81,96 @@ function jobManager(info) {
 				}
 				return i;
 			})
-		}
+		},
+		setSelf(obj) {
+			update(i => {
+				i = obj;
+				return i;
+			})
+		},
 	}
 }
 
 
 export const jobs = jobManager([
+	{	
+		index: 0,
+		// whether this job slot is on cooldown
+		cooldown: true,
+		// the actual initial cooldown timer (used for styling)
+		initcd: 0,
+		// this will be a timestamp
+		nextTime: 0,
+		// glory gain
+		reward: 1,
+		// type of res needed
+		type: "wood",
+		// amount needed
+		amount: 1000
+	},
+	{
+		index: 1,
+		// whether this job slot is on cooldown
+		cooldown: true,
+		// the actual initial cooldown timer (used for styling)
+		initcd: 0,
+		// this will be a timestamp
+		nextTime: 0,
+		// glory gain
+		reward: 1,
+		// type of res needed
+		type: "wood",
+		// amount needed
+		amount: 1000
+	},
+	{
+		index: 2,
+		// whether this job slot is on cooldown
+		cooldown: true,
+		// the actual initial cooldown timer (used for styling)
+		initcd: 0,
+		// this will be a timestamp
+		nextTime: 0,
+		// glory gain
+		reward: 1,
+		// type of res needed
+		type: "wood",
+		// amount needed
+		amount: 1000
+	},
+	{
+		index: 3,
+		// whether this job slot is on cooldown
+		cooldown: true,
+		// the actual initial cooldown timer (used for styling)
+		initcd: 0,
+		// this will be a timestamp
+		nextTime: 0,
+		// glory gain
+		reward: 1,
+		// type of res needed
+		type: "wood",
+		// amount needed
+		amount: 1000
+	},
+	{
+		index: 4,
+		// whether this job slot is on cooldown
+		cooldown: true,
+		// the actual initial cooldown timer (used for styling)
+		initcd: 0,
+		// this will be a timestamp
+		nextTime: 0,
+		// glory gain
+		reward: 1,
+		// type of res needed
+		type: "wood",
+		// amount needed
+		amount: 1000
+	}
+])
+
+export const baseJobs = jobManager([
 	{	
 		index: 0,
 		// whether this job slot is on cooldown

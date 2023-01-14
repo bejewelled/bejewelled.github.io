@@ -140,6 +140,42 @@ function policyCreator(info) {
 	}
 }
 
+// basic add/sub/set functions
+// use for simple stores that don't have multiple "layers" of depth
+function basic(info) {
+	// @ts-ignore
+	const { subscribe, set, update, get } = writable(info);
+
+	return {
+		subscribe,
+		/**
+		 * @param {string | number} type
+		 * @param {any} amt
+		 */
+		add(type, amt) {
+			update(i => {
+					// @ts-ignore
+		      			// @ts-ignore
+		      			i[type] = i[type] + amt
+		      			return i;
+     		
+		     })
+		},
+		setItem(type, amt) {
+			update(i => {
+				i[type] = amt;
+				return i;
+			})
+		},
+		setSelf(obj) {
+			update (i => {
+				i = obj;
+				return i;
+			})
+		},
+	};
+}
+
 
 export const policy = policyCreator({
 	'0': {
@@ -177,6 +213,11 @@ export const basePolicy = policyCreator({
 		criteria: [6]
 	},
 
+})
+
+export const policyBonuses = basic({
+	// key: building NAME (not id)
+	// value: bonus as a decimal (e.g. 0.08 = 8% bonus)
 })
 
 

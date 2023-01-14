@@ -1,6 +1,7 @@
 // @ts-nocheck
 // @ts-ignore
 import {writable, get} from 'svelte/store';
+// lmofao
 // @ts-ignore
 import {builds, allGens, allBonuses, allSubtracts} from './buildings.js';
 
@@ -219,10 +220,16 @@ function basic(info) {
 			update(i => {
 					// @ts-ignore
 		      			// @ts-ignore
-		      			i[type][0] = i[type][0] + amt
+		      			i[type] = i[type] + amt
 		      			return i;
      		
 		     })
+		},
+		setSelf(obj) {
+			update (i => {
+				i = obj;
+				return i;
+			})
 		},
 	};
 }
@@ -258,6 +265,7 @@ export const baseRes = playerRes({
 	coal: [0,50,0,0],
 	gold: [0,25,0,0],
 	science: [0,200,0,0],
+	magic: [0,35,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0],
 });
@@ -271,15 +279,90 @@ export const totalRes = playerRes({
 	iron: [0,100,0],
 	coal: [0,50,0],
 	gold: [0,25,0],
-	
 	science: [0,200,0],
+	magic: [0,35,0,0],
 	fame: [0,-1,0],
 	glory: [0,-1,0],
 });
 
+export const craftRes = playerRes({
+	plank: [0,0,0]
+})
+
+export const baseCraftRes = playerRes({
+	plank: [0,0,0]
+})
+
+export const unlockedResources = writable(new Set())
+
 export const fameTab = basic({
-	gloryLevel: 9,
-	gloryLevelTarget: 10
+	gloryLevel: 1,
+	gloryLevelTarget: 10,
+	jobMaxDiff: 4,
+	// index 0 - job cooldown
+	// index 1 - job max difficulty
+	// index 2 - number of jobs
+	jobUpgrades: [
+		{
+			index: 0,
+			level: 0,
+			baseCost: 10,
+			ratio: 1.15
+		},
+		{
+			index: 1,
+			level: 0,
+			baseCost: 500,
+			ratio: 1.6
+		},
+		{
+			index: 2,
+			level: 0,
+			baseCost: 25000,
+			ratio: 5
+		},
+	]
+})
+
+export const baseFameTab = basic({
+	gloryLevel: 1,
+	gloryLevelTarget: 10,
+	jobMaxDiff: 4,
+	jobUpgrades: [
+		{
+			index: 0,
+			level: 0,
+			baseCost: 10,
+			ratio: 1.15
+		},
+		{
+			index: 1,
+			level: 0,
+			baseCost: 500,
+			ratio: 1.6
+		},
+		{
+			index: 2,
+			level: 0,
+			baseCost: 25000,
+			ratio: 5
+		},
+	]
+})
+
+export const policyTab = basic({
+	policyLevel: 0,
+	policiesResearched: 0
+})
+
+export const basePolicyTab = basic({
+	policyLevel: 0,
+	policiesResearched: 0
+})
+
+export const policyBonuses = basic({
+	// key: building NAME (not id)
+	// value: bonus as a decimal (e.g. 0.08 = 8% bonus)
 })
 
 // add to here every time there is a new glory bonus

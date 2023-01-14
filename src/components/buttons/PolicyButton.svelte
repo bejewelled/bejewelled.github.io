@@ -50,7 +50,7 @@
   $: bonusText = getBonusText(id);
   $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
-  import { res } from '../../data/player.js';
+  import { res, policyBonuses } from '../../data/player.js';
   import { policy } from '../../data/policy.js';
   import {builds, buildCounts, resDeltas} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -58,7 +58,7 @@
   import {onMount, onDestroy} from 'svelte'
   import {allGens} from '../../data/buildings.js'
 
-  const decround = (n, places) => {
+  const decround = (n, places=3) => {
     if (n < 1e3) return n.toLocaleString();
     if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(places) + "K";
     if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(places) + "M";

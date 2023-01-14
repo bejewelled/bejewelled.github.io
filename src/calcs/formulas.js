@@ -27,6 +27,10 @@ export default class fm {
     }
   }
 
+  // returns the decimal bonus (need to add one for a multiplier)
+  static calcPolicyBonus(lv) {
+    return (Math.pow(lv, 1.2)/100);
+  }
   // job difficulty is on a scale of 1 - 8
 
 }

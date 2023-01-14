@@ -2,7 +2,8 @@
 // @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {science} from './science.js'
-import {res} from './player.js'
+import {res, fameTab} from './player.js'
+import fm from '../calcs/formulas.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { kelp: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { kelp: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 1: { id: number; name: string; description: string; costs: { copper: number; iron: number; }; ratio: number; gens: {}; caps: {}; bonuses: { kelp: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { copper: number; iron: number; }; ratio: number; gens: {}; caps: {}; bonuses: { kelp: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 2: { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { sand: number; wood: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { sand: number; wood: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 3: { id: number; name: string; description: string; costs: { sand: number; }; ratio: number; gens: { science: number; }; caps: { science: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; }; ratio: number; gens: { science: number; }; caps: { science: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 4: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: { kelp: number; sand: number; wood: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: { kelp: number; sand: number; wood: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 5: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: {}; bonuses: { wood: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: {}; bonuses: { wood: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 6: { id: number; name: string; description: string; costs: { sand: number; copper: number; }; ratio: number; gens: { kelp: number; wood: number; copper: number; iron: number; coal: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; copper: number; }; ratio: number; gens: { kelp: number; wood: number; copper: number; iron: number; coal: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 7: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: { fame: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: { fame: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; }} info
  */
@@ -230,7 +231,6 @@ function allGensCreator(info) {
 					if (curr['subtracts']) {
 						for (let x of Object.entries(curr['subtracts'])) {
 							if (get(res)[x[0]][3] == 1) {
-								console.log(curr);
 								hasRes = false;
 							}
 						}
@@ -240,7 +240,8 @@ function allGensCreator(info) {
 				 //  ({ ...acc, [key]: (acc[key] || 0) + (value*curr['count'])}), { ...curr['gens'] });
 					for (let [ck, cv] of Object.entries(curr['gens'])) {
 						if (curr['toggleable'] && hasRes) {
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][1];
+							i[ck] = (i[ck] || 0) + (cv*cts[k[0]][1] 
+								* (1)) ; // policy bonuses
 						} else if (hasRes) {
 							i[ck] = (i[ck] || 0) + cv*cts[k[0]][0];
 						}
@@ -370,6 +371,8 @@ function resDeltasCreator(info) {
 				let b = Object.entries(get(builds))
 				let cts = get(buildCounts);
 				let hasRes = true;
+				let gloryBonus = fm.calcGloryBonusProduction(get(fameTab)['gloryLevel'])
+
 				for (let k of b) {
 					hasRes = true;
 					// get info of current building
@@ -390,9 +393,12 @@ function resDeltasCreator(info) {
 							// cv - the amount generated per tick
 							// cts[k[0]][1] - the count of the building
 							// ^^ = counts of the current building's index
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][1];
+							// NOTE: Glory bonus is 5% for toggleable buildings!
+							i[ck] = ((i[ck] || 0) + cv*cts[k[0]][1])
+							* (1+(gloryBonus*0.05));
 						} else if (hasRes) {
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][0];
+							i[ck] = ((i[ck] || 0) + cv*cts[k[0]][0])
+							* (1 + gloryBonus);
 						}
 					}
 					// subtract consumption
@@ -678,6 +684,28 @@ export const builds = buildings({
 		criteria: [12],
 		visible: false
 	},
+	'11': {
+		id: 11,
+		name: 'Crypt',
+		description: 'Wonder what\'s inside...',
+		costs: {
+			iron: 666,
+			gold: 111
+		},
+		ratio: 1.25,
+		gens: {
+			magic: 0.02
+		},
+		caps: {},
+		bonuses: {
+			gold: 6.66
+		},
+		subtracts: {},
+		toggleable: false,
+		available: false,
+		criteria: [8,10],
+		visible: false
+	},
 
 })
 
@@ -935,6 +963,28 @@ export const baseBuilds = buildings({
 		toggleable: false,
 		available: false,
 		criteria: [12],
+		visible: false
+	},
+	'11': {
+		id: 11,
+		name: 'Crypt',
+		description: 'Wonder what\'s inside...',
+		costs: {
+			iron: 666,
+			gold: 111
+		},
+		ratio: 1.25,
+		gens: {
+			magic: 0.02
+		},
+		caps: {},
+		bonuses: {
+			gold: 6.66
+		},
+		subtracts: {},
+		toggleable: false,
+		available: false,
+		criteria: [8,10],
 		visible: false
 	},
 })

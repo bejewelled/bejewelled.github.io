@@ -25,7 +25,8 @@
 
 
 				{#each currRes as res}
-					{#if $totalRes[res[0]][0] > 0}
+					{#if $unlockedResources.has(res[0])}
+
 							<div class="col-span-4 mainText">
 							<span class="{colors[res[0]] || colors['default']}">{res[0]}
 							</span></div>	
@@ -75,6 +76,24 @@
 										</span>
 									</div>
 									{/if}
+									{#if gloryProdBonus > 0}
+										<div class='grid row grid-cols-12 items-start pb-1'>
+											<span class='col-span-7 text-left'>
+												Glory (Production): 
+											</span>
+											<span class='col-span-5 text-right pr-1'>
+												+{round(gloryProdBonus * 100)}%
+											</span>
+										</div>	
+										<div class='grid row grid-cols-12 items-start pb-1'>
+											<span class='col-span-7 text-left'>
+												Glory (Conversion): 
+											</span>
+											<span class='col-span-5 text-right pr-1'>
+												+{round(gloryProdBonus* 0.05 * 100)}%
+											</span>
+										</div>									
+									{/if}
 									<!-- add subtractions to tooltip, if applicable -->
 									{#if $allSubtracts[res[0]] > 0.0003}
 							<div class='grid row grid-cols-12 items-start pb-1'>
@@ -114,6 +133,20 @@
 							{/if}	
 				{/each}
 
+<!-- 				{#each $craftRes as re}
+					{#if res[0][2]}
+							<div class="col-span-4 mainText">
+							<span class="{colors[res[0]] || colors['default']}">{re[0]}
+							</span></div>	
+							<div class='col-span-5 text-left mainText'>
+								<span class='text-white'> {round(re[1][0], 3)} </span>
+								{#if re[1][1] > -0.9}
+								<span class='gameTextWhite'> / {round(re[1][1], 3)}</span>
+								{/if}
+							</div>
+					{/if}
+				{/each} -->
+
 					</div>
 				</div>
 			</div>
@@ -130,7 +163,7 @@
 								<TabButton on:click={() => changeTab('science')} text='Science'/>
 							</div>
 						{/if}
-						{#if $totalRes['fame'][0] > 0.01}
+						{#if $res['fame'][0] > 0.01}
 							<div class='flex'>
 								<TabButton on:click={() => changeTab('fame')} text='Fame'/>
 							</div>
@@ -139,6 +172,39 @@
 							<div class='flex'>
 								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
 							</div>
+						{/if}
+						{#if $fameTab['gloryLevel'] >= 3}
+							{#if $fameTab['gloryLevel'] >= 7}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
+							</div>
+							{:else}
+							<div class='flex'>
+								<TabButton text='Lv 7'/>
+							</div>
+							{/if}
+						{/if}
+						{#if $fameTab['gloryLevel'] >= 3}
+							{#if $fameTab['gloryLevel'] >= 10}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
+							</div>
+							{:else}
+							<div class='flex'>
+								<TabButton text='Lv 10'/>
+							</div>
+							{/if}
+						{/if}
+						{#if $fameTab['gloryLevel'] >= 3}
+							{#if $fameTab['gloryLevel'] >= 13}
+							<div class='flex'>
+								<TabButton text='Policy'/>
+							</div>
+							{:else}
+							<div class='flex'>
+								<TabButton text='Lv 13'/>
+							</div>
+							{/if}
 						{/if}
 					</div>
 				</div>
@@ -185,6 +251,14 @@
 				{/if}
 
 				{#if activeTab == 'policy'}
+				<div class='p-3'></div>
+				<div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+  				<div class="mainText progbar-fame bg-green-300 h-2.5 rounded-full" style="width: {($policyTab['policiesResearched'] - ($policyTab['policyLevel']*10) / 10)}% "></div>
+					</div>
+				<div class='text-center gameTextWhite pt-1 mainText'>Unlock {((($policyTab['policyLevel']+1) * 10) - ($policyTab['policiesResearched']))} more policies to gain a bonus to all of them.</div>
+
+				<div class='text-center gameTextWhite pt-1 mainText'>Current bonus to all policies: <strong>{round(fm.calcPolicyBonus($policyTab['policyLevel']))}%</strong></div>
+				<div class='p-3'><hr/></div>
 				<label>
 					<input type=checkbox bind:checked={showUnlockedPolicy}>
 					<span class='gameTextWhite select-none'>Show already researched policies</span>
@@ -214,7 +288,7 @@
   						<div class="mainText progbar-fame bg-orange-400 h-2.5 rounded-full" style="width: {$res.glory[0] / gloryNextLevelTarget * 100}% "></div>
 						</div>
 					</div> 
-					<div class='text-center gameTextWhite mainText'>You are glory level <strong>{$fameTab['gloryLevel']}</strong></div>
+					<div class='text-center gameTextWhite pt-1 mainText'>You are glory level <strong>{$fameTab['gloryLevel']}</strong></div>
 					<div class='text-center gameTextWhite'>You need {round(gloryNextLevelTarget - $res.glory[0]
 					)} glory to reach the next level.</div>
 					<div class='p-1 text-center mainText gameTextWhite'>Your glory level grants +{round(fm.calcGloryBonusProduction($fameTab['gloryLevel']) * 100)}% to all production.</div>
@@ -222,20 +296,24 @@
 					<!--  Use a for loop when the quest backend is finished  -->
 					{#each $jobs as job}
 					<div class='grid grid-cols-12'>
-						<div class='col-span-4 pr-3'> <QuestSubmitButton index={job['index']} /> </div>
+						<div class='col-span-3 pr-1'> <QuestSubmitButton index={job['index']} /> </div>
 					{#if !job['cooldown']}
-						<div class='col-span-1 p-1 text-vert-center text-left gameTextWhite mainText'>  Cost:</div>
+						<div class='col-span-1 pr-1'> <QuestRefreshButton index={job['index']} /> </div>
 						<div class='col-span-4 p-1 text-vert-center text-right gameTextWhite mainText'>  {round(job['amount'])} {job['type']}</div>
-						<div class='col-span-3 p-1 text-vert-center text-right text-amber-300 mainText'>+{job['reward']} Glory</div>
+						<div class='col-span-4 p-1 text-vert-center text-right text-amber-300 mainText'>+{round(job['reward'])} Glory</div>
 					
 					{:else}
-					<div class='col-span-8 p-1 text-vert-center text-right gameTextWhite mainText'>  You have recently completed this job.</div>
+					<div class='col-span-9 p-1 text-vert-center text-right text-gray-600 mainText'>This job is refreshing.</div>
 					{/if}
 					<div class='p-1'></div>
 					</div>
 					{/each}
-				{/if}
 
+					<div class='p-3'> <hr/> </div>
+					{#each $fameTab['jobUpgrades'] as job}
+					<div class='row col-span-3 pt-1 pb-1'> <QuestUpgradeButton index={job['index']}/> </div>
+					{/each}
+				{/if}
 			</div>
 		</div>
 </div>
@@ -252,10 +330,12 @@
 	import PolicyButton from '../components/buttons/PolicyButton.svelte'
 	import FameBankButton from '../components/buttons/FameBankButton.svelte';
 	import QuestSubmitButton from '../components/buttons/QuestSubmitButton.svelte';
-	import { res, baseRes, gloryBonuses, totalRes, fameTab } from '../data/player.js';
+	import QuestRefreshButton from '../components/buttons/QuestRefreshButton.svelte';
+	import QuestUpgradeButton from '../components/buttons/QuestUpgradeButton.svelte';
+	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources } from '../data/player.js';
 	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseBuilds, baseAllGens, baseBuildCounts } from '../data/buildings.js';
 	import { science, baseScience } from '../data/science.js';
-	import {jobs} from '../data/jobs.js'
+	import {jobs, baseJobs} from '../data/jobs.js'
 	import { policy, basePolicy } from '../data/policy';
 	import {onMount, onDestroy} from 'svelte';
 	import {get} from 'svelte/store'
@@ -271,6 +351,7 @@
 	$: gloryBuffs = Object.entries(get(gloryBonuses));
 
 	let gloryVal = get(res)['glory'][0]
+	let gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel']);
 
 	// sets display color for the resource name
 	// good as a reference for other sections
@@ -284,7 +365,8 @@
 		coal: 'text-white',
 		fame: 'text-orange-400',
 		glory: 'text-amber-300',
-		science: 'text-sky-500'
+		science: 'text-sky-500',
+		magic: 'text-indigo-500'
 	}
 
 	// NONREACTIVE_VARS
@@ -319,7 +401,7 @@
 	//  	return (Math.floor(i*Math.pow(10,places))/Math.pow(10,places)).toString() + s;
 	// })
 
-  const round = (n, places) => {
+  const round = (n, places = 3) => {
     if (n < 1e3) return n.toLocaleString();
     if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(places) + "K";
     if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(places) + "M";
@@ -332,19 +414,9 @@
 
 	// onMount
 	let lastTick = performance.now()
-
 	onMount(() => {
-
-		jobs.addJob(0);
-		jobs.addJob(1);
-		jobs.addJob(2);
-		jobs.addJob(3);
-		jobs.addJob(4);
-		jobs.remJob(0);
-		jobs.remJob(1);
-		jobs.remJob(2);
-		jobs.remJob(3);
-		jobs.remJob(4);
+		$unlockedResources = new Set();
+		console.log($unlockedResources)
 
 		// init build count list
 		buildCounts.init(100);
@@ -363,6 +435,8 @@
 			resDeltas.updateAll();
 		}
 
+		gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel']);
+		gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel']);
 		// start main game loop
 		let rid = requestAnimationFrame(function update() {
 			let now = performance.now()
@@ -397,13 +471,13 @@
 				fameTab.add('gloryLevel', 1);
 				res.sub('glory', gloryNextLevelTarget)
 				gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel'] + 1)
+				gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel'])
 			}
 			for (let c in Object.entries(get(builds))) {
       		builds.checkResUnlockThreshold(c);
     	}
 
     	jobs.renew();
-
     	// CONSOLE_TEST
 
 
@@ -500,6 +574,15 @@
 		if (counter > 5) {
 			counter = 0;
 			allGens.updateAll();
+			// adds any resources that are currently being produced
+			for (let i of Object.keys(get(allGens))) {
+				if (get(allGens)[i] > 0) {
+					$unlockedResources.add(i);
+				}
+			}
+			if (get(totalRes)['glory'][0] > 0) {
+				$unlockedResources.add('glory')
+			}
 			allSubtracts.updateAll();
 			allBonuses.updateAll();
 			resDeltas.updateAll();
@@ -528,6 +611,9 @@
 		savestr['resDeltas'] = get(resDeltas)
 		savestr['science'] = get(science);
 		savestr['policy'] = get(policy);
+		savestr['fameTab'] = get(fameTab);
+		savestr['unlockedResources'] = [...$unlockedResources]; // convert set to array to store
+		savestr['jobs'] = get(jobs)
 		savestr = btoa(JSON.stringify(savestr));
 		localStorage.setItem('data', savestr);
 	}
@@ -538,10 +624,12 @@
 		res.setSelf(savestr['res'] || get(baseRes));
 		totalRes.setSelf(savestr['totalRes'] || get(totalRes));
 		builds.setSelf(savestr['builds'] || get(baseBuilds));
-		console.log(get(builds))
 		science.setSelf(savestr['science'] || get(baseScience));
 		buildCounts.setSelf(savestr['buildCounts'] || get(baseBuildCounts));
 		policy.setSelf(savestr['policy'] || get(basePolicy));
+		fameTab.setSelf(savestr['fameTab'] || get(baseFameTab));
+		jobs.setSelf(savestr['jobs'] || get(baseJobs));
+		$unlockedResources = new Set(Object.values(savestr['unlockedResources']));	
 		allGens.updateAll();
 		allSubtracts.updateAll();
 		allBonuses.updateAll();
@@ -577,13 +665,13 @@
     res.set('fame', 0);
     res.add('glory', bankAmt);
 
+    fameTab.setSelf(get(baseFameTab));
 		builds.setSelf(get(baseBuilds));
-		console.log(get(builds))
-		console.log(get(baseBuilds));
 		buildCounts.init(100);
 		science.setSelf(get(baseScience));
 		science.lockAll();
 		science.checkCriteria();
+		$unlockedResources = new Set(['kelp']);
 		activeTab = 'main';
 		allGens.updateAll();
 		allSubtracts.updateAll();	
@@ -600,27 +688,27 @@
 		background-color: #222529;
 	}
 	:global(.mainText) {
-		font-size: 15px;
+		font-size: 17px;
 	}
 	:global(.game-text-size) {
-		font-size: 15px;
+		font-size: 17px;
 	}
 	:global(.gameText) {
-		font-size: 15px;
+		font-size: 17px;
 	}
 	:global(.gameTextWhite) {
-		font-size: 15px;
+		font-size: 17px;
 		color: white;
 	}
 	:global(.text-small-white) {
-		font-size: 13px;
+		font-size: 14px;
 		color: white;
 	}
 	:global(.text-small) {
-		font-size: 13px;
+		font-size: 14px;
 	}
 	:global(.text-small-gray) {
-    font-size: 13px;
+    font-size: 14px;
     color: gray;
   }
   :global(.text-med-gray) {
@@ -628,7 +716,7 @@
     color: gray;
   }
   :global(.text-small-gray) {
-    font-size: 12px;
+    font-size: 13px;
     color: gray;
   }
  :global(.game-btn-noafford) {
