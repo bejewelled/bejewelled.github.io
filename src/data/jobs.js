@@ -24,7 +24,6 @@ function jobManager(info) {
 			return num;
 		},
 		jobComplete: (index) => info[index]['cooldown'],
-		// 8.68k - ignore
 		addJob(index) {
 			update(i => {
 				let possibleTypes = [...get(unlockedResources)]
@@ -41,13 +40,13 @@ function jobManager(info) {
 				
 				const diffTable = tb.jobDifficultyTable();
 				// if rarity of the resource > 1, takes that into account
-				// up to 64x (4^3) multiplier
+				// max rarity: 5
 				const rarityMod = diffTable[type] || 1
 
 	
 				let time = 90 + Math.floor(Math.random() * (210 + 200*Math.min(rarityMod, maxDiff)))
-				const timeMod = Math.floor((time - 200) / 200);
-				difficulty = Math.floor(2*rarityMod + 0.8*effDiff);
+				const timeMod = Math.floor((time - 200) / 200); // time mod can be up to 12
+				difficulty = Math.floor(1.6*rarityMod + 0.3333*timeMod);
 
 				const gtTemp = tb.difficultyGloryTable();
 				const rewardMulti = (3 * Math.pow(1.1, get(fameTab)['jobUpgrades'][1]['level']));

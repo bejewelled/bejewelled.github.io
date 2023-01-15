@@ -31,6 +31,5 @@ export default class fm {
   static calcPolicyBonus(lv) {
     return (Math.pow(lv, 1.2)/100);
   }
-  // job difficulty is on a scale of 1 - 8
 
 }

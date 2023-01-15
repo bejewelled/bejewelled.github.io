@@ -174,7 +174,7 @@
 							</div>
 						{/if}
 						{#if $fameTab['gloryLevel'] >= 3}
-							{#if $fameTab['gloryLevel'] >= 7}
+							{#if $fameTab['gloryLevel'] >= 3}
 							<div class='flex'>
 								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
 							</div>
@@ -217,13 +217,13 @@
 								<ClickButton text={'Gather Kelp'} on:click={kelpClick}></ClickButton>
 							</div>
 							<!-- change the length each time you add a building !-->
-							{#each {length: numBuildings} as _, i}
-							{#if $builds[i]['available'] && $builds[i]['visible']}
+							{#each Object.entries($builds) as build}
+							{#if build[1]['available'] && build[1]['visible']}
 							<div class='p-1'>
-								<BuildingButton id={i} 
-								text={$builds[i]['toggleable'] ? 
-								$builds[i]['name'] + " (" + $buildCounts[i][1] + " / " + $buildCounts[i][0] + ")" :
-								$builds[i]['name'] + " (" + $buildCounts[i][0] + ")"}/>
+								<BuildingButton id={build[1]['name']}
+								text={build[1]['toggleable'] ? 
+								build[1]['name'] + " (" + $buildCounts[build[1]['name']][1] + " / " + $buildCounts[build[1]['name']][0] + ")" :
+								build[1]['name'] + " (" + $buildCounts[build[1]['name']][0] + ")"}/>
 							</div>
 							{/if}
 							{/each}
@@ -255,7 +255,7 @@
 				<div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
   				<div class="mainText progbar-fame bg-green-300 h-2.5 rounded-full" style="width: {($policyTab['policiesResearched'] - ($policyTab['policyLevel']*10) / 10)}% "></div>
 					</div>
-				<div class='text-center gameTextWhite pt-1 mainText'>Unlock {((($policyTab['policyLevel']+1) * 10) - ($policyTab['policiesResearched']))} more policies to gain a bonus to all of them.</div>
+				<div class='text-center gameTextWhite pt-1 mainText'>Unlock {((($policyTab['policyLevel']+1) * 10) - ($policyTab['policiesResearched']))} more policies to gain milestone bonuses. </div>
 
 				<div class='text-center gameTextWhite pt-1 mainText'>Current bonus to all policies: <strong>{round(fm.calcPolicyBonus($policyTab['policyLevel']))}%</strong></div>
 				<div class='p-3'><hr/></div>
@@ -263,11 +263,11 @@
 					<input type=checkbox bind:checked={showUnlockedPolicy}>
 					<span class='gameTextWhite select-none'>Show already researched policies</span>
 				</label>
-					{#each {length: numPolicy} as _, i}
-						{#if (!($policy[i]['researched']) || showUnlockedPolicy) && $policy[i]['available']}
-					<div class='p-2 grid'>
+					{#each Object.entries($policy) as pol}
+						{#if (!(pol[1]['researched']) || showUnlockedPolicy) && pol[1]['available']}
+					<div class='p-1 grid'>
 						<div class='row'>
-							<PolicyButton id={i} class='p-1'/>
+							<PolicyButton id={pol[1]['name']} class='p-1'/>
 						</div> 
 					</div> 
 					{/if}
@@ -473,8 +473,8 @@
 				gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel'] + 1)
 				gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel'])
 			}
-			for (let c in Object.entries(get(builds))) {
-      		builds.checkResUnlockThreshold(c);
+			for (let c of Object.entries(get(builds))) {
+      		builds.checkResUnlockThreshold(c[0]);
     	}
 
     	jobs.renew();
@@ -541,7 +541,7 @@
 				}
 				}
 		}
-		for (let [id, obj] of Object.entries(get(science))) {
+		for (let [id, obj] of Object.entries(get(policy))) {
 				if (!(existingPolicy[id] === undefined) && existingPolicy[id]['researched'] == true) {
 					policy.unlock(id);
 				}
@@ -553,11 +553,6 @@
 		resDeltas.updateAll();
 		science.checkCriteria();
 		policy.checkCriteria();
-		for (let id of Object.entries(get(science))) {
-			if (id[1]['researched']) {
-				science.updateSpecialCase(id[0], true); // update special cases, but don't double-add
-			}
-		}
 	}
 
 //--------------

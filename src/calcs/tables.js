@@ -26,4 +26,5 @@ export default class tb {
       12: 800000,
     }
   }
+
 }

@@ -9,7 +9,7 @@
      on:click={() => buy({id})}
      class='has-tooltip mainText p-1 items-center text-center 
      {affordStyle} select-none'>{titleText}
-              <span class='w-[260px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
+              <span class='w-[290px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
@@ -113,7 +113,6 @@
     science.unlock(sid.id);
     science.checkCriteria();
     // handle special cases here
-    science.updateSpecialCase(sid.id);
     getTitleText(sid);
     getAffordStyle(sid.id);
     getCostText(sid);

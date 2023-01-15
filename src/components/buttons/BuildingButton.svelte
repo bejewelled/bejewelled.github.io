@@ -90,7 +90,7 @@
 <script>
 // @ts-nocheck
 
-  import { res } from '../../data/player.js';
+  import { res, policyBonuses } from '../../data/player.js';
   import { builds, allGens, allBonuses, buildCounts, allSubtracts, resDeltas } from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
   import {get} from 'svelte/store'
@@ -286,7 +286,8 @@
           text: txt
         });
     }
-    for (let [type, val] of Object.entries(get(builds)[bid.id]['gens'])) {
+    for (let [type, vRaw] of Object.entries(get(builds)[bid.id]['gens'])) {
+        const val = vRaw * (1 + (get(policyBonuses)[bid.id.toLowerCase()] || 0))
         let txt = (val > 0 ? '+' : '') + decround(val*5, 3).toString() + " / sec" 
         list.push({
           type: 'afford',

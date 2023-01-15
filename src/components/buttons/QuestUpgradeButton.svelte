@@ -65,6 +65,7 @@
 
 
   function buy(index) {
+    if (index == 1 && get(fameTab)['jobUpgrades'][1] > 7) return; // max level of 7
     console.log(index)
     if (get(res)['fame'][0] >= calcCost(index)) {
       let i = get(fameTab);
@@ -128,7 +129,7 @@
       case 0:
         return 'Increases the completed job refresh rate by 5%.'
       case 1:
-        return 'Increases the rewards for completed jobs. Higher difficulty jobs gain a better bonus.'
+        return 'Increases the maximum difficulty for jobs; higher difficulty jobs reward significantly more glory.'
       case 2:
         return 'Increase the number of simultaneous job listings by one.'
     }
@@ -140,14 +141,14 @@
       case 0:
         return 'Current: ' + decround((600* Math.pow(0.95, get(fameTab)['jobUpgrades'][index]['level']))) + 's'
       case 1:
-        const val = (3 * Math.pow(1.1, get(fameTab)['jobUpgrades'][index]['level'] - 1));
-        return 'Current: ' + decround(val) +  ' - ' + decround(4*val) + "%"
+        const val = 4 + get(fameTab)['jobUpgrades'][1]['level']
       case 2:
         return 'Current: ' + (5 + get(fameTab)['jobUpgrades'][index]['level'])
     }
   }
 
   function setCostText(index) {
+      if (index == 1 && get(fameTab)['jobUpgrades'][1]['level'] > 7) return 'This upgrade is at max level.'
       if (get(res)['fame'][0] < calcCost(index)) {
         let remain = calcCost(index) - get(res)['fame'][0];
         // in seconds vv

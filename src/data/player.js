@@ -220,7 +220,7 @@ function basic(info) {
 			update(i => {
 					// @ts-ignore
 		      			// @ts-ignore
-		      			i[type] = i[type] + amt
+		      			i[type] = (i[type] || 0) + amt
 		      			return i;
      		
 		     })
@@ -313,7 +313,7 @@ export const fameTab = basic({
 			index: 1,
 			level: 0,
 			baseCost: 500,
-			ratio: 1.6
+			ratio: 3
 		},
 		{
 			index: 2,
@@ -339,7 +339,7 @@ export const baseFameTab = basic({
 			index: 1,
 			level: 0,
 			baseCost: 500,
-			ratio: 1.6
+			ratio: 3
 		},
 		{
 			index: 2,

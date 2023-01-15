@@ -85,56 +85,6 @@ function scienceCreator(info) {
 				return i;
 			})
 		},
-		/**
-		 * @param {string | number} sci
-		 */
-		updateSpecialCase(sci, onLoad = false) {
-			update (i => {
-				console.log(i[sci]['id'])
-				switch (i[sci]['id'].toString()) {
-			      // Case number is the string of the science ID in README
-			      // Construction increases study effectiveness
-			    	case '2':
-				        builds.updateItemValue(2, 'gens', {
-				          copper: 0.005
-				        }); 
-				        builds.updateItemValue(2, 'caps', {
-				          copper: 100
-				        });     
-				     	if (!onLoad) {
-				        	res.addCap('science', 150 * get(buildCounts)[2][0]) 
-				        }
-				        allGens.updateAll();
-				        break;
-			      	case '3':
-				        builds.updateItemValue(3, 'caps', {
-				          science: get(builds)[3]['caps']['science'] + 150
-				        });
-				        builds.updateItemValue(3, 'gens', {
-				          science: get(builds)[3]['gens']['science']*1.3
-				        });
-				        builds.updateItemValue(2, 'gens', {
-				          wood: get(builds)[2]['gens']['wood']*1.5
-				        });
-				        if (!onLoad) {
-				        	res.addCap('science', 150 * get(buildCounts)[3][0]) // 3 as the ID for studies
-				        }
-				        allGens.updateAll();
-				        console.log(get(builds)[1])
-			        	break;
-					case '10':
-						builds.updateItemValue(2, 'gens', {
-							wood: get(builds)[2]['gens']['wood']*2.30
-						});
-						builds.updateItemValue(2, 'gens', {
-							sand: get(builds)[2]['gens']['sand']*2
-						})
-			      	default:
-			        	break;
-	    		}
-	   			return i;
-			})
-		},
 		getSelf() {
 			update(i => {
 				return i;
@@ -175,10 +125,6 @@ export const science = scienceCreator({
 		costs: {
 			science: 120
 		},
-		bonuses: [
-			{label: 'Sand Nets copper production: ', val: '0.05/sec'},
-			{label: 'Silo copper storage: ', val: '100'},
-		],
 		researched: false,
 		available: false,
 		criteria: [0]
@@ -190,11 +136,6 @@ export const science = scienceCreator({
 		costs: {
 			science: 200
 		},
-		bonuses: [
-			{label: 'Study science cap: ', val: '+150'},
-			{label: 'Study science production: ', val: '+30%'},
-			{label: 'Sand Nets wood production: ', val: '+50%'},
-		],
 		researched: false,
 		available: false,
 		criteria: [1]
@@ -273,10 +214,6 @@ export const science = scienceCreator({
 		costs: {
 			science: 800
 		},
-		bonuses: [
-			{label: 'Sand Nets sand production: ', val: '+100%'},
-			{label: 'Sand Nets wood production: ', val: '+130%'},
-		],
 		researched: false,
 		available: false,
 		criteria: [6]
@@ -350,10 +287,6 @@ export const baseScience = scienceCreator({
 		costs: {
 			science: 120
 		},
-		bonuses: [
-			{label: 'Sand Nets copper production: ', val: '0.05/sec'},
-			{label: 'Silo copper storage: ', val: '100'},
-		],
 		researched: false,
 		available: false,
 		criteria: [0]
@@ -365,11 +298,6 @@ export const baseScience = scienceCreator({
 		costs: {
 			science: 200
 		},
-		bonuses: [
-			{label: 'Study science cap: ', val: '+150'},
-			{label: 'Study science production: ', val: '+30%'},
-			{label: 'Sand Nets wood production: ', val: '+50%'},
-		],
 		researched: false,
 		available: false,
 		criteria: [1]
@@ -448,10 +376,6 @@ export const baseScience = scienceCreator({
 		costs: {
 			science: 800
 		},
-		bonuses: [
-			{label: 'Sand Nets sand production: ', val: '+100%'},
-			{label: 'Sand Nets wood production: ', val: '+130%'},
-		],
 		researched: false,
 		available: false,
 		criteria: [6]
@@ -491,7 +415,6 @@ export const baseScience = scienceCreator({
 		available: false,
 		criteria: [10]
 	},
-	
 
 })
 

@@ -2,7 +2,8 @@
 // @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {science} from './science.js'
-import {res, fameTab} from './player.js'
+import {res, fameTab, policyBonuses, policyTab} from './player.js'
+import {policy} from './policy.js' // if slowdowns occur try moving getPnum() to player.js
 import fm from '../calcs/formulas.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { kelp: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { kelp: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 1: { id: number; name: string; description: string; costs: { copper: number; iron: number; }; ratio: number; gens: {}; caps: {}; bonuses: { kelp: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { copper: number; iron: number; }; ratio: number; gens: {}; caps: {}; bonuses: { kelp: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 2: { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { sand: number; wood: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { sand: number; wood: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 3: { id: number; name: string; description: string; costs: { sand: number; }; ratio: number; gens: { science: number; }; caps: { science: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; }; ratio: number; gens: { science: number; }; caps: { science: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 4: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: { kelp: number; sand: number; wood: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: { kelp: number; sand: number; wood: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 5: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: {}; bonuses: { wood: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: {}; bonuses: { wood: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 6: { id: number; name: string; description: string; costs: { sand: number; copper: number; }; ratio: number; gens: { kelp: number; wood: number; copper: number; iron: number; coal: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; copper: number; }; ratio: number; gens: { kelp: number; wood: number; copper: number; iron: number; coal: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 7: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: { fame: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: { fame: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; }} info
@@ -99,11 +100,11 @@ function buildings(info) {
 		 */
 		checkResUnlockThreshold(id) {
 			update(i => {
-				for (let c of Object.entries(i[id]['costs'])) {
+				let costs = i[id]['costs']
+				for (let c of Object.entries(costs)) {
 					if (i[id]['visible'] == false && get(res)[c[0]][0] > 0.2*c[1]) {
-						console.log(id)
-						
 						i[id]['visible'] = true;
+						console.log(i[id]['visible'])
 					}
 				}
 				return i;
@@ -138,8 +139,9 @@ function buildingCountCreator(info) {
 		 */
 		init(len) {
 			update(i => {
-				for(let c = 0; c < len; c++) {
-					i[c.toString()] = [0,0];
+				const names = Object.keys(get(builds))
+				for(let c = 0; c < names.length; c++) {
+					i[names[c]] = [0,0];
 				}
 				return i;
 			})
@@ -240,8 +242,12 @@ function allGensCreator(info) {
 				 //  ({ ...acc, [key]: (acc[key] || 0) + (value*curr['count'])}), { ...curr['gens'] });
 					for (let [ck, cv] of Object.entries(curr['gens'])) {
 						if (curr['toggleable'] && hasRes) {
-							i[ck] = (i[ck] || 0) + (cv*cts[k[0]][1] 
-								* (1)) ; // policy bonuses
+							i[ck] = (i[ck] || 0) + (cv*cts[k[0]][1]
+								* (1+(get(policyBonuses)[ck] || 0)) // policy bonuses
+								* (policy.getPnum() >= 10 ?
+									(ck === 'fame' ? 2 : 1)
+									: 1)
+									) // policy milestone 10 (fame production +100%) 
 						} else if (hasRes) {
 							i[ck] = (i[ck] || 0) + cv*cts[k[0]][0];
 						}
@@ -429,7 +435,7 @@ function resDeltasCreator(info) {
 }
 
 export const builds = buildings({
-	'0': {
+	'Kelp Farm': {
 		id: 0,
 		name: 'Kelp Farm',
 		description: 'Harvests some kelp from the... void? Look, this isn\'t supposed to be hyper-realistic.',
@@ -448,7 +454,7 @@ export const builds = buildings({
 		criteria: [],
 		visible: false
 	},
-	'1': {
+	'Pasture': {
 		id: 1,
 		name: 'Pasture',
 		description: 'Significantly increases kelp production.',
@@ -469,7 +475,7 @@ export const builds = buildings({
 		criteria: [9],
 		visible: false
 	},
-	'2': {
+	'Sand Nets': {
 		id: 2,
 		name: 'Sand Nets',
 		description: 'Catches sand and twigs from the sea floor.',
@@ -489,7 +495,7 @@ export const builds = buildings({
 		criteria: [],
 		visible: false
 	},
-	'3': { 
+	'Study': { 
 		id: 3,
 		name: 'Study',
 		description: 'The study allows turtles to converse and theorize about new scientific knowledge.',
@@ -510,12 +516,12 @@ export const builds = buildings({
 		criteria: [],
 		visible: false
 	},
-	'4': {
+	'Silo': {
 		id: 4,
 		name: 'Silo',
 		description: 'A place for your turtles to store excess stuff.',
 		costs: {
-			sand: 6,
+			sand: 10,
 			wood: 1
 		},
 		ratio: 1.75,
@@ -527,7 +533,8 @@ export const builds = buildings({
 		caps: {
 			kelp: 300,
 			sand: 100,
-			wood: 100
+			wood: 100,
+			copper: 50
 		},
 		toggleable: false,
 		available: false,
@@ -535,17 +542,17 @@ export const builds = buildings({
 		visible: false
 
 	},
-	'5': {
+	'Mill': {
 		id: 5,
 		name: 'Mill',
-		description: 'A grinder for large rocks and twigs, the mill increases sand and wood output.',
+		description: 'A grinder for large rocks and twigs, the mill increases sand and wood output. Also dredges up some copper from time to time.',
 		costs: {
 			sand: 40,
 			wood: 10
 		},
 		ratio: 1.15,
 		gens: {
-
+			copper: 0.002
 		},
 		caps: {
 		},
@@ -560,7 +567,7 @@ export const builds = buildings({
 		visible: false
 
 	},
-	'6': {
+	'Furnace': {
 		id: 6,
 		name: 'Furnace',
 		description: 'Furnaces allow for a revolutionary increase in metal-producing power, at the cost of burnable materials.',
@@ -588,7 +595,7 @@ export const builds = buildings({
 		visible: false
 
 	},
-	'7': {
+	'Statue': {
 		id: 7,
 		name: 'Statue',
 		description: 'Turtles have big egos; statues will let visitors know who\'s the best.',
@@ -610,7 +617,7 @@ export const builds = buildings({
 		criteria: [4],
 		visible: false
 	},
-	'8': {
+	'Observatory': {
 		id: 8,
 		name: 'Observatory',
 		description: 'Observatories allow turtles additional availability to record movement of the stars, increasing scientific effectiveness.',
@@ -632,7 +639,7 @@ export const builds = buildings({
 		criteria: [11],
 		visible: false
 	},
-	'9': {
+	'Storehouse': {
 		id: 9,
 		name: 'Storehouse',
 		description: 'Dramatically increases storage capability, enabling more advanced structures.',
@@ -660,7 +667,7 @@ export const builds = buildings({
 		criteria: [10],
 		visible: false
 	},
-	'10': {
+	'Town Hall': {
 		id: 10,
 		name: 'Town Hall',
 		description: 'Unlocks many new upgrades and produces luxury currency. Can be significantly improved later.',
@@ -684,7 +691,7 @@ export const builds = buildings({
 		criteria: [12],
 		visible: false
 	},
-	'11': {
+	'Crypt': {
 		id: 11,
 		name: 'Crypt',
 		description: 'Wonder what\'s inside...',
@@ -710,7 +717,7 @@ export const builds = buildings({
 })
 
 export const baseBuilds = buildings({
-	'0': {
+		'Kelp Farm': {
 		id: 0,
 		name: 'Kelp Farm',
 		description: 'Harvests some kelp from the... void? Look, this isn\'t supposed to be hyper-realistic.',
@@ -729,7 +736,7 @@ export const baseBuilds = buildings({
 		criteria: [],
 		visible: false
 	},
-	'1': {
+	'Pasture': {
 		id: 1,
 		name: 'Pasture',
 		description: 'Significantly increases kelp production.',
@@ -750,7 +757,7 @@ export const baseBuilds = buildings({
 		criteria: [9],
 		visible: false
 	},
-	'2': {
+	'Sand Nets': {
 		id: 2,
 		name: 'Sand Nets',
 		description: 'Catches sand and twigs from the sea floor.',
@@ -770,7 +777,7 @@ export const baseBuilds = buildings({
 		criteria: [],
 		visible: false
 	},
-	'3': {
+	'Study': { 
 		id: 3,
 		name: 'Study',
 		description: 'The study allows turtles to converse and theorize about new scientific knowledge.',
@@ -791,7 +798,7 @@ export const baseBuilds = buildings({
 		criteria: [],
 		visible: false
 	},
-	'4': {
+	'Silo': {
 		id: 4,
 		name: 'Silo',
 		description: 'A place for your turtles to store excess stuff.',
@@ -808,7 +815,8 @@ export const baseBuilds = buildings({
 		caps: {
 			kelp: 300,
 			sand: 100,
-			wood: 100
+			wood: 100,
+			copper: 50
 		},
 		toggleable: false,
 		available: false,
@@ -816,17 +824,17 @@ export const baseBuilds = buildings({
 		visible: false
 
 	},
-	'5': {
+	'Mill': {
 		id: 5,
 		name: 'Mill',
-		description: 'A grinder for large rocks and twigs, the mill increases sand and wood output.',
+		description: 'A grinder for large rocks and twigs, the mill increases sand and wood output. Also dredges up some copper from time to time.',
 		costs: {
 			sand: 40,
 			wood: 10
 		},
 		ratio: 1.15,
 		gens: {
-
+			copper: 0.002
 		},
 		caps: {
 		},
@@ -841,7 +849,7 @@ export const baseBuilds = buildings({
 		visible: false
 
 	},
-	'6': {
+	'Furnace': {
 		id: 6,
 		name: 'Furnace',
 		description: 'Furnaces allow for a revolutionary increase in metal-producing power, at the cost of burnable materials.',
@@ -869,7 +877,7 @@ export const baseBuilds = buildings({
 		visible: false
 
 	},
-	'7': {
+	'Statue': {
 		id: 7,
 		name: 'Statue',
 		description: 'Turtles have big egos; statues will let visitors know who\'s the best.',
@@ -891,7 +899,7 @@ export const baseBuilds = buildings({
 		criteria: [4],
 		visible: false
 	},
-	'8': {
+	'Observatory': {
 		id: 8,
 		name: 'Observatory',
 		description: 'Observatories allow turtles additional availability to record movement of the stars, increasing scientific effectiveness.',
@@ -913,7 +921,7 @@ export const baseBuilds = buildings({
 		criteria: [11],
 		visible: false
 	},
-	'9': {
+	'Storehouse': {
 		id: 9,
 		name: 'Storehouse',
 		description: 'Dramatically increases storage capability, enabling more advanced structures.',
@@ -941,7 +949,7 @@ export const baseBuilds = buildings({
 		criteria: [10],
 		visible: false
 	},
-	'10': {
+	'Town Hall': {
 		id: 10,
 		name: 'Town Hall',
 		description: 'Unlocks many new upgrades and produces luxury currency. Can be significantly improved later.',
@@ -965,7 +973,7 @@ export const baseBuilds = buildings({
 		criteria: [12],
 		visible: false
 	},
-	'11': {
+	'Crypt': {
 		id: 11,
 		name: 'Crypt',
 		description: 'Wonder what\'s inside...',

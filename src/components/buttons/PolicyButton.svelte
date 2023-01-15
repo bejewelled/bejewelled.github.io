@@ -50,7 +50,7 @@
   $: bonusText = getBonusText(id);
   $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
-  import { res, policyBonuses } from '../../data/player.js';
+  import { res, policyBonuses, policyTab } from '../../data/player.js';
   import { policy } from '../../data/policy.js';
   import {builds, buildCounts, resDeltas} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -112,7 +112,10 @@
     policy.unlock(sid.id);
     policy.checkCriteria();
     // handle special cases here
-    policy.updateSpecialCase(sid.id);
+    for (let i of Object.entries(get(policy)[sid.id]['bonuses'])) {
+      policyBonuses.add(i[0].toLowerCase(), i[1])
+    }
+    policyTab.add('policiesResearched', 1);
     getTitleText(sid);
     getAffordStyle(sid.id);
     getCostText(sid);

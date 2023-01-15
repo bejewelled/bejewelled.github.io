@@ -2,7 +2,7 @@
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
 import { science, baseScience } from './science.js';
-import {res} from './player.js'
+import {res, policyBonuses, policyTab} from './player.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { policy: number; }; researched: boolean; available: boolean; 
 // the IDs of the policy prerequisites to unlock this one (check README)
@@ -87,6 +87,17 @@ function policyCreator(info) {
 				return i;
 			})
 		},
+		applyMilestoneBonuses() {
+			// note: these are not ALL of the bonuses
+			// bonuses that affect other areas will be in other sections
+			// this is used for onMount() primarily
+			const val = get(policyTab)['policiesResearched']
+			
+		},
+		// gets total number of policies researched
+		getPnum() {
+			return get(policyTab)['policiesResearched']
+		},	
 		/**
 		 * @param {string | number} sci
 		 */
@@ -178,47 +189,122 @@ function basic(info) {
 
 
 export const policy = policyCreator({
-	'0': {
+	'Fertilizer': {
 		id: 0,
-		name: 'Environmentalism',
-		description: 'Numeric competency is required for advanced architectural and scientific pursuits. Turtles can use this to dramatically improve their sand nets.',
+		// name of the building + tier of policy
+		code: "kelp farm 1",
+		name: 'Fertilizer',
+		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
 		costs: {
 			science: 800
 		},
-		bonuses: [
-			{label: 'Sand Nets sand production: ', val: '+100%'},
-			{label: 'Sand Nets wood production: ', val: '+130%'},
-		],
+		bonuses: {
+			'Kelp Farm': 0.75
+		},
 		researched: false,
 		available: false,
-		criteria: [6]
+		criteria: []
+	},
+	'Iron Nets': {
+		id: 1,
+		// name of the building + tier of policy
+		code: "sand net 1",
+		name: 'Iron Nets',
+		description: 'The stronger nets make a big difference!',
+		costs: {
+			science: 1900,
+			iron: 525
+		},
+		bonuses: {
+			'Sand Nets': 0.35,
+			'Kelp Farm': 0.10
+		},
+		researched: false,
+		available: false,
+		criteria: []
+	},
+	'Alloyed Nets': {
+		id: 2,
+		// name of the building + tier of policy
+		code: "sand net 1",
+		name: 'Alloyed Nets',
+		description: 'Even more robust nets lead to an unprecedented jump in productivity, in many ways!',
+		costs: {
+			science: 25000,
+			iron: 4000,
+			copper: 4000,
+			gold: 250
+		},
+		bonuses: {
+			'Sand Nets': 0.9,
+			'Mill': 0.25
+		},
+		researched: false,
+		available: false,
+		criteria: [1]
 	},
 
 })
 
 export const basePolicy = policyCreator({
-	'0': {
-		id: 10,
-		name: 'Basic Mathematics',
-		description: 'Numeric competency is required for advanced architectural and scientific pursuits. Turtles can use this to dramatically improve their sand nets.',
+	'Fertilizer': {
+		id: 0,
+		// name of the building + tier of policy
+		code: "kelp farm 1",
+		name: 'Fertilizer',
+		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
 		costs: {
 			science: 800
 		},
-		bonuses: [
-			{label: 'Sand Nets sand production: ', val: '+100%'},
-			{label: 'Sand Nets wood production: ', val: '+130%'},
-		],
+		bonuses: {
+			'Kelp Farm': 0.75
+		},
 		researched: false,
 		available: false,
-		criteria: [6]
+		criteria: []
+	},
+	'Iron Nets': {
+		id: 1,
+		// name of the building + tier of policy
+		code: "sand net 1",
+		name: 'Iron Nets',
+		description: 'The stronger nets make a big difference!',
+		costs: {
+			science: 1900,
+			iron: 525
+		},
+		bonuses: {
+			'Sand Nets': 0.35,
+			'Kelp Farm': 0.10
+		},
+		researched: false,
+		available: false,
+		criteria: []
+	},
+	'Alloyed Nets': {
+		id: 2,
+		// name of the building + tier of policy
+		code: "sand net 1",
+		name: 'Alloyed Nets',
+		description: 'Even more robust nets lead to an unprecedented jump in productivity, in many ways!',
+		costs: {
+			science: 25000,
+			iron: 4000,
+			copper: 4000,
+			gold: 250
+		},
+		bonuses: {
+			'Sand Nets': 0.9,
+			'Mill': 0.25
+		},
+		researched: false,
+		available: false,
+		criteria: [1]
 	},
 
 })
 
-export const policyBonuses = basic({
-	// key: building NAME (not id)
-	// value: bonus as a decimal (e.g. 0.08 = 8% bonus)
-})
+
 
 
 
