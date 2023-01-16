@@ -1,0 +1,7 @@
+Passive - Moving generates 2 stacks of Vibrance per second up to 10, tripled when moving towards an enemy champion. Reaching 10 stacks of Vibrance grants 20/30/40% move speed for 2 seconds.
+
+Attacks consume up to 5 vibrance and deal a bonus 1.5% AD magic damage per unit consumed. If a champion is attacked, 3 vibrance is restored.
+If Xouryn has 10 vibrance, he will consume the remaining vibrance to fire a second, faster attack that deals  (2 - 5.5)% max health magic damage (6 vibrance is restored when targeting champions).
+
+
+Q - Fire five bursts in a line, dealing 
