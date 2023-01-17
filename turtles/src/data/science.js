@@ -1,7 +1,7 @@
 // @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
-import {res} from './player.js'
+import {res, visible, researched} from './player.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { science: number; }; researched: boolean; available: boolean; 
 // the IDs of the science prerequisites to unlock this one (check README)
@@ -60,27 +60,33 @@ function scienceCreator(info) {
 		lockAll() {
 			update(i => {
 				for (let k of Object.entries(i)) {
-					console.log(k);
-					k[1]['researched'] = false;
-					k[1]['available'] = false;
+					visible.setRem(k[0], 'science')
 				}
-				i['0']['available'] = true;
+				visible.setAdd('infrastructure', 'science')
 				return i;
 			})
 		},
 		checkCriteria() {
 			update(i => {
 				for (let b of Object.entries(i)) {
+					if (b[0] === 'infrastructure') {
+						visible.setAdd(b[0], 'science');
+						continue;
+					}
 					let isSatisfied = true;
-					for (let sci of b[1]['criteria']) {
-						if (get(science)[sci]['researched'] == false) {
+					for (let req of b[1]['criteria']) {
+						if (!(get(researched)['science'].has(req))) {
+							console.log('ad')
 							isSatisfied = false;
+
+							break;
 						}
 
 					}
 					if (isSatisfied === true) {
-						b[1]['available'] = true;
+						visible.setAdd(b[0], 'science')
 					}
+					
 				}
 				return i;
 			})

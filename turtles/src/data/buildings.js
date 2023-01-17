@@ -2,7 +2,7 @@
 // @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {science} from './science.js'
-import {res, fameTab, policyBonuses, policyTab} from './player.js'
+import {res, fameTab, policyBonuses, policyTab, visible, researched} from './player.js'
 import {policy} from './policy.js' // if slowdowns occur try moving getPnum() to player.js
 import fm from '../calcs/formulas.js'
 /**
@@ -84,12 +84,13 @@ function buildings(info) {
 				for (let b of Object.entries(i)) {
 					let isSatisfied = true;
 					for (let sci of b[1]['criteria']) {
-						if (!(get(science)[sci]['researched'])) {
+						if (!(get(researched)['science'].has(sci))) {
 							isSatisfied = false;
 						}
 					}
 					if (isSatisfied === true) {
-						b[1]['available'] = true;
+						//console.log(b[0]);
+						researched.setAdd(b[0].toLowerCase(), 'builds')
 					}
 				}
 				return i;
@@ -102,11 +103,14 @@ function buildings(info) {
 			update(i => {
 				let costs = i[id]['costs']
 				for (let c of Object.entries(costs)) {
-					if (i[id]['visible'] == false && get(res)[c[0]][0] > 0.2*c[1]) {
-						i[id]['visible'] = true;
-						console.log(i[id]['visible'])
+					if (!(get(researched)['builds'].has(i[id]['name'].toLowerCase())) 
+						|| get(res)[c[0]][0] <= 0.2*c[1]) {
+						return i;
+						
 					}
 				}
+
+				visible.setAdd(i[id]['name'].toLowerCase(), 'builds')
 				return i;
 			})
 		},
@@ -404,7 +408,6 @@ function resDeltasCreator(info) {
 							i[ck] = ((i[ck] || 0) + cv*cts[k[0]][1])*this.getTotalBonus(k)
 						} else if (hasRes) {
 							i[ck] = ((i[ck] || 0) + cv*cts[k[0]][0])*this.getTotalBonus(k)
-							if (k[0] == 'kelp farm') console.log(i[ck])
 						}
 					}
 					// subtract consumption
@@ -428,6 +431,7 @@ function resDeltasCreator(info) {
 							i[ck] *= (1 + (cv/100) || 1);
 						}
 					}
+
 				return i;
 			})
 		}

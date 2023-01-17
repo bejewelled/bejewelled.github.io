@@ -44,9 +44,11 @@ function jobManager(info) {
 				const rarityMod = diffTable[type] || 1
 
 	
-				let time = 90 + Math.floor(Math.random() * (210 + 200*Math.min(rarityMod, maxDiff)))
-				const timeMod = Math.floor((time - 200) / 200); // time mod can be up to 12
+				let timeBase = 90 + Math.floor(Math.random() * (210 + 200*Math.min(rarityMod, maxDiff)))
+				const timeMod = Math.floor((timeBase - 200) / 200); // time mod can be up to 12
 				difficulty = Math.floor(1.2*rarityMod + 0.5*timeMod);
+
+				const time = timeBase * 3 + (Math.random()*2)
 
 				const gtTemp = tb.difficultyGloryTable();
 				const rewardMulti = (3 * Math.pow(1.1, get(fameTab)['jobUpgrades'][1]['level']));

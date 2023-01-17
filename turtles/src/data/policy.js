@@ -2,7 +2,7 @@
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
 import { science, baseScience } from './science.js';
-import {res, policyBonuses, policyTab} from './player.js'
+import {res, policyBonuses, policyTab, visible, researched} from './player.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { policy: number; }; researched: boolean; available: boolean; 
 // the IDs of the policy prerequisites to unlock this one (check README)
@@ -74,25 +74,29 @@ function policyCreator(info) {
 			update(i => {
 				for (let b of Object.entries(i)) {
 					let isSatisfied = true;
-					for (let pol of b[1]['criteria']) {
+					for (let req of b[1]['criteria']) {
 						console.log(b[1]['criteria'])
-						if (!(get(policy)[pol]['researched'])) {
+						if (!(get(visible)['policy'].has(req))) {
 							isSatisfied = false;
 						}
 
 					}
 					if (isSatisfied === true) {
-						b[1]['available'] = true;
+						visible.setAdd(b[0], 'policy')
 					}
 				}
 				return i;
 			})
 		},
-		applyMilestoneBonuses() {
+		setPoliciesResearched() {
 			// note: these are not ALL of the bonuses
 			// bonuses that affect other areas will be in other sections
 			// this is used for onMount() primarily
-			const val = get(policyTab)['policiesResearched']
+			let r = 0;
+			for (let i of Object.values(get(policyTab)['policiesResearched'])) {
+				if (i['researched']) r++;
+			}
+			policyTab.set('policiesResearched', r);
 			
 		},
 		// gets total number of policies researched
@@ -170,7 +174,7 @@ export const policy = policyCreator({
 		id: 0,
 		// name of the building + tier of policy
 		code: "kelp farm 1",
-		name: 'Fertilizer',
+		name: 'Fertilizer I',
 		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
 		costs: {
 			science: 800
@@ -182,8 +186,40 @@ export const policy = policyCreator({
 		available: false,
 		criteria: []
 	},
-	1: {
-		id: 1,
+	0: {
+		id: 0,
+		// name of the building + tier of policy
+		code: "kelp farm 1",
+		name: 'Fertilizer I',
+		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
+		costs: {
+			science: 800
+		},
+		bonuses: {
+			'Kelp Farm': 0.75
+		},
+		researched: false,
+		available: false,
+		criteria: []
+	},
+	0: {
+		id: 0,
+		// name of the building + tier of policy
+		code: "kelp farm 1",
+		name: 'Fertilizer I',
+		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
+		costs: {
+			science: 800
+		},
+		bonuses: {
+			'Kelp Farm': 0.75
+		},
+		researched: false,
+		available: false,
+		criteria: []
+	},
+	100: {
+		id: 100,
 		// name of the building + tier of policy
 		code: "sand net 1",
 		name: 'Iron Nets',
@@ -200,8 +236,8 @@ export const policy = policyCreator({
 		available: false,
 		criteria: []
 	},
-	2: {
-		id: 2,
+	101: {
+		id: 101,
 		// name of the building + tier of policy
 		code: "sand net 1",
 		name: 'Alloyed Nets',

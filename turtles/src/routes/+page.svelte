@@ -152,7 +152,7 @@
 			</div>
 
 				<!-- Game Tab Buttons go here -->
-			<div class='p-4 col-span-5 items-start mb-12'>
+			<div class='p-4 col-span-6 items-start mb-12'>
 				<div class='wrapper mt-2'>
 					<div class='flex flex-row'>
 							<div class='flex'>
@@ -218,7 +218,7 @@
 							</div>
 							<!-- change the length each time you add a building !-->
 							{#each Object.entries($builds) as build}
-							{#if build[1]['available'] && build[1]['visible']}
+							{#if $visible['builds'].has(build[0].toLowerCase())}
 							<div class='p-1'>
 								<BuildingButton id={build[1]['name'].toLowerCase()}
 								text={build[1]['toggleable'] ? 
@@ -241,7 +241,7 @@
 						<span class='gameTextWhite select-none'>Show already researched technologies</span>
 					</label>
 					{#each Object.entries($science) as sci}
-						{#if (!(sci[1]['researched']) || showUnlockedSciences) && sci[1]['available']}
+						{#if ((!($researched['science'].has(sci[0])) || showUnlockedSciences)) && $visible['science'].has(sci[0])}
 						<div class='p-1'> 
 							<ScienceButton id={sci[0].toLowerCase()} class='p-1' 
 							text={sci[1]['name']}/>
@@ -293,9 +293,10 @@
 				{#if activeTab == 'policy'}
 				<div class='p-3'></div>
 				<div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-  				<div class="mainText progbar-fame bg-green-300 h-2.5 rounded-full" style="width: {Math.min(($policyTab['policiesResearched'] - ($policyTab['policyLevel']*10)), 100)}% "></div>
+  				<div class="mainText progbar-fame bg-green-300 h-2.5 rounded-full" style="width: {
+  					($policyTab['policiesResearched'] % 10) * 10}% "></div>
 					</div>
-				<div class='text-center gameTextWhite pt-1 mainText'>Unlock {((($policyTab['policyLevel']+1) * 10) - ($policyTab['policiesResearched']))} more policies to gain milestone bonuses. </div>
+				<div class='text-center gameTextWhite pt-1 mainText'>Unlock {((($policyTab['policyLevel']+1) * 10) - ($policyTab['policiesResearched']))} more policies to gain a bonus to all of them. </div>
 
 				<div class='text-center gameTextWhite pt-1 mainText'>Current bonus to all policies: <strong>{round(fm.calcPolicyBonus($policyTab['policyLevel']))}%</strong></div>
 				<div class='p-3'><hr/></div>
@@ -304,10 +305,10 @@
 					<span class='gameTextWhite select-none'>Show already researched policies</span>
 				</label>
 					{#each Object.entries($policy) as pol}
-						{#if (!(pol[1]['researched']) || showUnlockedPolicy) && pol[1]['available']}
+						{#if (!($researched['policy'].has(pol[0])) || showUnlockedPolicy) && $visible['policy'].has(pol[0])}
 					<div class='p-1 grid'>
 						<div class='row'>
-							<PolicyButton id={pol[1]['name'].toLowerCase()} class='p-1'/>
+							<PolicyButton id={pol[1]['id']} class='p-1'/>
 						</div> 
 					</div> 
 					{/if}
@@ -316,6 +317,8 @@
 
 				
 			</div>
+
+			<div class='p-4 col-span-2 items-start mb-12'></div>
 		</div>
 </div>
 
@@ -333,7 +336,7 @@
 	import QuestSubmitButton from '../components/buttons/QuestSubmitButton.svelte';
 	import QuestRefreshButton from '../components/buttons/QuestRefreshButton.svelte';
 	import QuestUpgradeButton from '../components/buttons/QuestUpgradeButton.svelte';
-	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources } from '../data/player.js';
+	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources, visible, researched } from '../data/player.js';
 	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseBuilds, baseAllGens, baseBuildCounts } from '../data/buildings.js';
 	import { science, baseScience } from '../data/science.js';
 	import {jobs, baseJobs} from '../data/jobs.js'
@@ -427,16 +430,18 @@
 		//baseScience.setSelf(get(science));
 		// if there is save data, load it
 		if (localStorage.getItem('data') !== null) {
-			load();
-			// adds new content, if needed
-			fixContent();
-			allGens.updateAll();
-			allSubtracts.updateAll();
-			allBonuses.updateAll();
-			resDeltas.updateAll();
-		} else {
-			reset();
+			const loader = setTimeout(() => {
+				load();
+				// adds new content, if needed
+				//();
+				allGens.updateAll();
+				allSubtracts.updateAll();
+				allBonuses.updateAll();
+				resDeltas.updateAll();
+			}, 2000)
 		}
+
+		$unlockedResources = new Set([...$unlockedResources, 'kelp'])	
 
 		gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel']);
 		gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel']);
@@ -469,6 +474,8 @@
 		// check for new unlocks every second
 		checkResUnlockInterval = setInterval(() => { 
 			builds.checkSciCriteria();
+
+
 			// level up if player has enough glory for the next level
 			if (get(res)['glory'][0] >= gloryNextLevelTarget) {
 				fameTab.add('gloryLevel', 1);
@@ -482,12 +489,12 @@
 
     	jobs.renew();
     	// CONSOLE_TEST
-
-
     }, 1000)
 
 		// unlock buildings that need to be unlocked
 		builds.checkSciCriteria();
+		// update the number of policies researched
+		policy.setPoliciesResearched();
 	});
 
 	function fixContent() {
@@ -554,8 +561,8 @@
 		allSubtracts.updateAll();
 		allBonuses.updateAll();
 		resDeltas.updateAll();
-		science.checkCriteria();
-		policy.checkCriteria();
+		//science.checkCriteria();
+		//policy.checkCriteria();
 	}
 
 //--------------
@@ -612,11 +619,15 @@
 		savestr['fameTab'] = get(fameTab);
 		savestr['unlockedResources'] = [...$unlockedResources]; // convert set to array to store
 		savestr['jobs'] = get(jobs)
+		savestr['visible'] = [[...get(visible)['builds']], [...get(visible)['science']], [...get(visible)['policy']]]
+		savestr['researched'] = [[...get(researched)['builds']], [...get(researched)['science']], [...get(researched)['policy']]]
+		console.log(savestr['researched'])
+		console.log(savestr['visible']);
 		savestr = btoa(JSON.stringify(savestr));
 		localStorage.setItem('data', savestr);
 	}
 
-	function load() {
+	async function load() {
 		const savestr = JSON.parse(atob(localStorage.getItem('data')));
 		// const savedata = savestr.split("} ")
 		res.setSelf(savestr['res'] || get(baseRes));
@@ -627,6 +638,22 @@
 		policy.setSelf(savestr['policy'] || get(basePolicy));
 		fameTab.setSelf(savestr['fameTab'] || get(baseFameTab));
 		jobs.setSelf(savestr['jobs'] || get(baseJobs));
+		console.log(savestr['visible'])
+		console.log(savestr['researched'][1])
+		$visible = {
+			builds: new Set(savestr['visible'][0]),
+			science: new Set(savestr['visible'][1]),
+			policy: new Set(savestr['visible'][2]),
+		}
+		$researched = {
+			builds: new Set(savestr['researched'][0]),
+			science: new Set(savestr['researched'][1]),
+			policy: new Set(savestr['researched'][2]),
+		}
+
+		console.log($visible)
+		console.log($researched)
+
 		$unlockedResources = new Set(Object.values(savestr['unlockedResources']));	
 		allGens.updateAll();
 		allSubtracts.updateAll();
@@ -648,14 +675,14 @@
 	}
 
 	function reset() {
-	 	let confLeft = 5;
-	 	if (!confirm("ARE YOU SURE you want to reset? This is a HARD reset and will clear everything! (Additional confirmation required after this)")) {
-	 		return;
-	 	}
-	 	let confText = prompt("Please type \"I want to reset the game.\" EXACTLY as shown (without quotes) to reset.");
-	 	if (confText !== "I want to reset the game.") {
-	 		return;
-	 	}
+	 	// let confLeft = 5;
+	 	// if (!confirm("ARE YOU SURE you want to reset? This is a HARD reset and will clear everything! (Additional confirmation required after this)")) {
+	 	// 	return;
+	 	// }
+	 	// let confText = prompt("Please type \"I want to reset the game.\" EXACTLY as shown (without quotes) to reset.");
+	 	// if (confText !== "I want to reset the game.") {
+	 	// 	return;
+	 	// }
 		baseRes.clear();
 		console.log(get(baseRes));
 		res.setSelf(get(baseRes));
@@ -665,12 +692,23 @@
     res.add('glory', bankAmt);
 
     fameTab.setSelf(get(baseFameTab));
+    policyTab.setSelf(get(basePolicyTab));
 		builds.setSelf(get(baseBuilds));
 		buildCounts.init(100);
 		science.setSelf(get(baseScience));
 		science.lockAll();
-		science.checkCriteria();
+		policy.lockAll();
 		$unlockedResources = new Set(['kelp']);
+		$visible = {
+			builds: new Set(),
+			science: new Set(),
+			policy: new Set(),
+		}
+		$researched = {
+			builds: new Set(['kelp farm']),
+	 		science: new Set(),
+	 		policy: new Set()
+	 	}
 		activeTab = 'main';
 		policy.setSelf(get(basePolicy));
 		jobs.setSelf(get(baseJobs));
@@ -679,9 +717,13 @@
 		allBonuses.updateAll();
 		resDeltas.updateAll();
 		builds.hideAll();
-		localStorage.clear();
+		//science.checkCriteria();
+		console.log($visible)
+		//initVisRes();
 		console.log(get(builds));
-		//location.reload();
+		localStorage.clear();
+		save();
+		location.reload();
 	 }
 </script>
 
@@ -716,10 +758,6 @@
   }
   :global(.text-med-gray) {
     font-size: 14px;
-    color: gray;
-  }
-  :global(.text-small-gray) {
-    font-size: 13px;
     color: gray;
   }
  :global(.game-btn-noafford) {

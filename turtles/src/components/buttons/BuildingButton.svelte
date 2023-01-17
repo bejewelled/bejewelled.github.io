@@ -38,7 +38,7 @@
               {/each}
               {#if (get(policyBonuses)[id] !== undefined)}
                 <div class='row grid-rows-1 pt-1'>
-                  <div class="grid text-small text-indigo-300 text-opacity-40">
+                  <div class="grid text-small text-indigo-300 text-opacity-55">
                     <div class="text-center">policy bonus: +{decround($policyBonuses[id] * 100)}%</div>
                   </div>
                 </div>

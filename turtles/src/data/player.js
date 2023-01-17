@@ -225,12 +225,48 @@ function basic(info) {
      		
 		     })
 		},
-		setSelf(obj) {
+		// add item to a set
+		setAdd(value, key=null) {
 			update (i => {
-				i = obj;
+				if (!key) {
+					i.add(value)
+				} else {
+					i[key].add(value)
+				}
 				return i;
 			})
 		},
+		setRem(value, key=null) {
+			update (i => {
+				if (!key) {
+					i.delete(value)
+				} else {
+					i[key].delete(value)
+				}
+				return i;
+			})
+		},
+		setClear(value) {
+			update(i => {
+				for (let c of Object.entries(i)) {
+					i[c[0]].clear();
+				}
+				return i;
+			})
+		},
+		setSelf(obj) {
+			update (i => {
+				i = obj;
+				if (i['science']) console.log(i);
+				return i;
+			})
+		},
+		set(key, value) {
+			update(i => {
+				i[key] = value;
+				return i;
+			})
+		}
 	};
 }
 
@@ -247,6 +283,7 @@ export const res = playerRes({
 	gold: [0,25,0,0],
 
 	science: [0,200,0,0],
+	magic: [0,35,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0]
 });
@@ -358,6 +395,18 @@ export const policyTab = basic({
 export const basePolicyTab = basic({
 	policyLevel: 0,
 	policiesResearched: 0
+})
+
+export const visible = basic({
+	builds: new Set(),
+	science: new Set(),
+	policy: new Set(),
+})
+
+export const researched = basic({
+	builds: new Set(),
+	science: new Set(),
+	policy: new Set(),
 })
 
 export const policyBonuses = basic({

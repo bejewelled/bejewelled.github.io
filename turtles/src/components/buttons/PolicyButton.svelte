@@ -49,7 +49,7 @@
   let bonusText = {};
   $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
-  import { res, policyBonuses, policyTab } from '../../data/player.js';
+  import { res, policyBonuses, policyTab, visible, researched } from '../../data/player.js';
   import { policy } from '../../data/policy.js';
   import {builds, buildCounts, resDeltas} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -96,7 +96,7 @@
 
   function buy(sid) { 
 
-    if (get(policy)[sid.id]['researched']) {
+    if ($visible['policy'].has(sid.id)) {
       return;
     }
     let takes = {}   
@@ -110,7 +110,8 @@
       }
     }
     res.subMany(takes);
-    policy.unlock(sid.id);
+    researched.setAdd(sid.id.toString().toLowerCase(),'policy')
+ // adds to researched set (unlocks it)
     policy.checkCriteria();
     // handle special cases here
     for (let i of Object.entries(get(policy)[sid.id]['bonuses'])) {
@@ -146,14 +147,14 @@
     console.log(get(policy))
     console.log(get(policy)[sid])
     titleText = get(policy)[sid]['name'];
-    if (get(policy)[sid]['researched'] == true) {
+    if ($visible['policy'].has(sid) == true) {
           titleText += ' (researched)'
     }
   }
 
   function getTitleText(sid) {
     titleText = get(policy)[sid.id]['name'];
-    if (get(policy)[sid.id]['researched'] == true) {
+    if ($visible['policy'].has(sid.id) == true) {
           titleText += ' (researched)'
     }
   }
@@ -210,7 +211,7 @@
 
 
   function getBonusText(sid) {
-      bonusText = get(policy)[sid.id.toLowerCase()]['bonuses'];
+      bonusText = get(policy)[sid.id]['bonuses'];
   }
 
 </script>

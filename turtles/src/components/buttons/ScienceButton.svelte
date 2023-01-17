@@ -50,7 +50,7 @@
   $: bonusText = getBonusText(id);
   $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
-  import { res } from '../../data/player.js';
+  import { res, visible, researched } from '../../data/player.js';
   import { science } from '../../data/science.js';
   import {builds, buildCounts, resDeltas} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -96,7 +96,7 @@
 
   function buy(sid) { 
 
-    if (get(science)[sid.id]['researched']) {
+    if ($researched['science'].has(sid.id)) {
       return;
     }
     let takes = {}   
@@ -110,7 +110,7 @@
       }
     }
     res.subMany(takes);
-    science.unlock(sid.id);
+    researched.setAdd(sid.id.toString().toLowerCase(),'science')
     science.checkCriteria();
     // handle special cases here
     getTitleText(sid);
@@ -141,14 +141,14 @@
 
   function getTitleTextNoobject(sid) {
     titleText = get(science)[id]['name'];
-    if (get(science)[id]['researched'] == true) {
+    if ($researched['science'].has(id)) {
           titleText += ' (researched)'
     }
   }
 
   function getTitleText(sid) {
     titleText = get(science)[sid.id]['name'];
-    if (get(science)[sid.id]['researched'] == true) {
+    if ($researched['science'].has(sid.id)) {
           titleText += ' (researched)'
     }
   }
