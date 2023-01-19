@@ -6,4 +6,4 @@ node_modules
 .env
 .env.*
 !.env.example
--README.md
+/src/data/-README.md
