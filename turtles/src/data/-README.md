@@ -1,3 +1,6 @@
+**Overwrite Master with [branch]**
+- git push https://github.com/bejewelled/bejewelled.github.io.git +[branch]:master
+
 **Order of Resource Listings**
 kelp
 sand
