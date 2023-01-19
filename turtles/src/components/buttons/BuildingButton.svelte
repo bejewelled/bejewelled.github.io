@@ -12,7 +12,7 @@
      class='has-tooltip gameText py-1 items-right text-center border-solid ml-1 mr-1
      {affordStyle} {toggleableBuild ? 'border-l-green-500 col-span-8' : 'col-span-12'}
      select-none'><span class='{textStyle}'>{text}</span>
-              <span class='w-[250px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16 mt-5'>
+              <span class='w-[285px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16 mt-5'>
               <div class='text-white-500 {textStyle} mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>

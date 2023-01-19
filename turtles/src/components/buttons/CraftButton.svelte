@@ -39,14 +39,13 @@
 
 	export let text;
   export let id;
-  export let amt = 1;
+  export let amt;
   let costText = [];
   let textStyle;
   let affordStyle;
   const updateInterval = 700 + Math.random() * 200
 
   const decround = (n, places) => {
-    console.log(n)
     if (n < 1e3) return n.toLocaleString();
     if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(places) + "K";
     if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(places) + "M";
@@ -135,7 +134,7 @@
 
 
 
-  function getCostText(bid) {
+  function getCostText(bid,amt) {
     let list = []
     for (let [type, val] of Object.entries(get(craftCosts)[bid])) {
       let req = val;
@@ -148,6 +147,7 @@
           val: type,
           text: txt
         });
+        continue;
       }
       if (get(res)[type][0] < req) {
         list.push({
