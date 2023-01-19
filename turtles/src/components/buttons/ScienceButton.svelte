@@ -50,7 +50,7 @@
   $: bonusText = getBonusText(id);
   $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
-  import { res, visible, researched } from '../../data/player.js';
+  import { res, visible, researched, craftTier } from '../../data/player.js';
   import { science } from '../../data/science.js';
   import {builds, buildCounts, resDeltas} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -111,6 +111,7 @@
     }
     res.subMany(takes);
     researched.setAdd(sid.id.toString().toLowerCase(),'science')
+    if (sid.id.toLowerCase() === 'crafting') $craftTier = 1;
     science.checkCriteria();
     // handle special cases here
     getTitleText(sid);

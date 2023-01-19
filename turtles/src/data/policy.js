@@ -75,8 +75,7 @@ function policyCreator(info) {
 				for (let b of Object.entries(i)) {
 					let isSatisfied = true;
 					for (let req of b[1]['criteria']) {
-						console.log(b[1]['criteria'])
-						if (!(get(visible)['policy'].has(req))) {
+						if (!(get(researched)['policy'].has(req))) {
 							isSatisfied = false;
 						}
 
@@ -177,46 +176,73 @@ export const policy = policyCreator({
 		name: 'Fertilizer I',
 		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
 		costs: {
-			science: 800
+			science: 800,
+			favor: 50
 		},
 		bonuses: {
 			'Kelp Farm': 0.75
 		},
-		researched: false,
-		available: false,
 		criteria: []
 	},
-	0: {
-		id: 0,
+	1: {
+		id: 1,
 		// name of the building + tier of policy
-		code: "kelp farm 1",
-		name: 'Fertilizer I',
-		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
+		code: "kelp farm 2",
+		name: 'Fertilizer II',
+		description: 'Improve the quality of fertilizer, increasing kelp production.',
 		costs: {
-			science: 800
+			science: 35000,
+			favor: 250
 		},
 		bonuses: {
 			'Kelp Farm': 0.75
 		},
-		researched: false,
-		available: false,
-		criteria: []
+		criteria: [0]
 	},
-	0: {
-		id: 0,
+	2: {
+		id: 2,
 		// name of the building + tier of policy
-		code: "kelp farm 1",
-		name: 'Fertilizer I',
-		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
+		code: "kelp farm 3",
+		name: 'Fertilizer III',
+		description: 'With drastic advancements in soil micronutrients, your turtles\' fertilizer has become absurdly effective.',
 		costs: {
-			science: 800
+			science: 225000,
+			favor: 1300
 		},
 		bonuses: {
-			'Kelp Farm': 0.75
+			'Kelp Farm': 0.9
 		},
-		researched: false,
-		available: false,
-		criteria: []
+		criteria: [1]
+	},
+	3: {
+		id: 3,
+		// name of the building + tier of policy
+		code: "kelp farm 4",
+		name: 'Fertilizer IV',
+		description: 'Do you even NEED this much kelp?',
+		costs: {
+			science: 2.4e6,
+			favor: 3000
+		},
+		bonuses: {
+			'Kelp Farm': 1.25
+		},
+		criteria: [2]
+	},
+	4: {
+		id: 4,
+		// name of the building + tier of policy
+		code: "kelp farm 5",
+		name: 'Fertilizer V',
+		description: 'I mean come on, this is just ridiculous.',
+		costs: {
+			science: 6e7,
+			favor: 5000
+		},
+		bonuses: {
+			'Kelp Farm': 1.25
+		},
+		criteria: [3]
 	},
 	100: {
 		id: 100,
@@ -226,14 +252,13 @@ export const policy = policyCreator({
 		description: 'The stronger nets make a big difference!',
 		costs: {
 			science: 1900,
-			iron: 525
+			iron: 525,
+			favor: 50
 		},
 		bonuses: {
 			'sand nets': 0.35,
 			'kelp farm': 0.10
 		},
-		researched: false,
-		available: false,
 		criteria: []
 	},
 	101: {
@@ -246,75 +271,19 @@ export const policy = policyCreator({
 			science: 25000,
 			iron: 4000,
 			copper: 4000,
-			gold: 250
+			gold: 250,
+			favor: 300
 		},
 		bonuses: {
 			'sand nets': 0.9,
 			'mill': 0.25
 		},
-		researched: false,
-		available: false,
 		criteria: [1]
 	},
 
 })
 
-export const basePolicy = policyCreator({
-	0: {
-		id: 0,
-		// name of the building + tier of policy
-		code: "kelp farm 1",
-		name: 'Fertilizer',
-		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
-		costs: {
-			science: 800
-		},
-		bonuses: {
-			'Kelp Farm': 0.75
-		},
-		researched: false,
-		available: false,
-		criteria: []
-	},
-	1: {
-		id: 1,
-		// name of the building + tier of policy
-		code: "sand net 1",
-		name: 'Iron Nets',
-		description: 'The stronger nets make a big difference!',
-		costs: {
-			science: 1900,
-			iron: 525
-		},
-		bonuses: {
-			'sand nets': 0.35,
-			'kelp farm': 0.10
-		},
-		researched: false,
-		available: false,
-		criteria: []
-	},
-	2: {
-		id: 2,
-		// name of the building + tier of policy
-		code: "sand net 1",
-		name: 'Alloyed Nets',
-		description: 'Even more robust nets lead to an unprecedented jump in productivity, in many ways!',
-		costs: {
-			science: 25000,
-			iron: 4000,
-			copper: 4000,
-			gold: 250
-		},
-		bonuses: {
-			'sand nets': 0.9,
-			'mill': 0.25
-		},
-		researched: false,
-		available: false,
-		criteria: [1]
-	},
-})
+
 
 
 

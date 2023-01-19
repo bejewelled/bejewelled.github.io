@@ -23,14 +23,13 @@
 				<div class='grid grid-rows-12 items-start'>
 					<div class='grid grid-cols-12 items-start'>
 
-
 				{#each currRes as res}
 					{#if $unlockedResources.has(res[0])}
 
-							<div class="col-span-4 mainText">
+							<div class="lg:col-span-3 mainText">
 							<span class="{colors[res[0]] || colors['default']}">{res[0]}
 							</span></div>	
-							<div class='col-span-5 text-left mainText'>
+							<div class='lg:col-span-5 text-left mainText'>
 								<span
 								class='{res[1][0] > res[1][1]*0.9997 && res[1][1] >= 0 ? "text-rose-400" : 
 								res[1][0] > res[1][1]*0.85 && res[1][1] >= 0 ? "text-orange-400" : "text-white"}'>{round(res[1][0], 3)}
@@ -40,7 +39,7 @@
 								{/if}
 							</div>
 						
-						<div class='col-span-3 text-left mainText gameTextWhite 
+						<div class='col-span-4 invisible lg:visible text-left mainText gameTextWhite 
 						has-tooltip mainText select-none'>
 						{#if !($allGens[res[0]] === undefined) && $allGens[res[0]] > 0}
 							{#if $resDeltas[res[0]] >= 0}+{/if}
@@ -54,7 +53,7 @@
 
 					<!-- production tooltip -->
 					<span class='w-[max-width-270px] text-small
-					grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
+						grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
 							<div class='grid row grid-cols-12 items-start pb-1'>
 										<span class='col-span-7 text-left'>
 											Production: 
@@ -133,19 +132,28 @@
 							{/if}	
 				{/each}
 
-<!-- 				{#each $craftRes as re}
-					{#if res[0][2]}
-							<div class="col-span-4 mainText">
-							<span class="{colors[res[0]] || colors['default']}">{re[0]}
-							</span></div>	
-							<div class='col-span-5 text-left mainText'>
-								<span class='text-white'> {round(re[1][0], 3)} </span>
-								{#if re[1][1] > -0.9}
-								<span class='gameTextWhite'> / {round(re[1][1], 3)}</span>
-								{/if}
+				<!-- Crafted Resource Display  -->
+				<div class='col-span-12 pt-5 pb-5 gameTextWhite'></div>
+				{#each Object.keys($craftRes) as cres}
+					{#if $craftRes[cres][1] > -2}
+							<div class="col-span-3 mainText py-1 text-left">
+								<span class="{colors[cres] || colors['default']}">{cres}</span>
 							</div>
+							<div class="col-span-3 mainText py-1 gameTextWhite text-left">
+								<span class='text-white'>{$craftRes[cres][0]}</span>
+							</div>
+							<div class="col-span-2 pr-1 py-1 mainText">
+								<CraftButton id={cres} amt=1 />
+							</div>
+							<div class="col-span-2 pr-1 py-1 mainText">
+								<CraftButton id={cres} amt=50 />
+							</div>
+							<div class="col-span-2 pr-1 py-1 mainText">
+								<CraftButton id={cres} amt=2000 />
+							</div>
+								
 					{/if}
-				{/each} -->
+				{/each}
 
 					</div>
 				</div>
@@ -173,8 +181,8 @@
 								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
 							</div>
 						{/if}
-						{#if $fameTab['gloryLevel'] >= 2}
-							{#if $fameTab['gloryLevel'] >= 2}
+						{#if $fameTab['gloryLevel'] >= 2 && $buildCounts['town hall'][0] > 0}
+							{#if $fameTab['gloryLevel'] >= 2 && $buildCounts['town hall'][0] > 0}
 							<div class='flex'>
 								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
 							</div>
@@ -329,6 +337,7 @@
 	import BuildingButton from '../components/buttons/BuildingButton.svelte';
 	import ScienceButton from '../components/buttons/ScienceButton.svelte';
 	import ClickButton from '../components/buttons/ClickButton.svelte';
+	import CraftButton from '../components/buttons/CraftButton.svelte';
 	import SaveLoadButton from '../components/buttons/SaveLoadButton.svelte';
 	import TabButton from '../components/buttons/TabButton.svelte';
 	import PolicyButton from '../components/buttons/PolicyButton.svelte'
@@ -337,10 +346,10 @@
 	import QuestRefreshButton from '../components/buttons/QuestRefreshButton.svelte';
 	import QuestUpgradeButton from '../components/buttons/QuestUpgradeButton.svelte';
 	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources, visible, researched } from '../data/player.js';
-	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseBuilds, baseAllGens, baseBuildCounts } from '../data/buildings.js';
+	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseAllGens, baseBuildCounts } from '../data/buildings.js';
 	import { science, baseScience } from '../data/science.js';
 	import {jobs, baseJobs} from '../data/jobs.js'
-	import { policy, basePolicy } from '../data/policy';
+	import { policy } from '../data/policy';
 	import {onMount, onDestroy} from 'svelte';
 	import {get} from 'svelte/store'
 	import fm from '../calcs/formulas.js'
@@ -370,7 +379,8 @@
 		fame: 'text-orange-400',
 		glory: 'text-amber-300',
 		science: 'text-sky-500',
-		magic: 'text-indigo-500'
+		magic: 'text-indigo-500',
+		favor: 'text-emerald-300'
 	}
 
 	// NONREACTIVE_VARS
@@ -423,7 +433,7 @@
 		console.log($unlockedResources)
 
 		// init build count list
-		buildCounts.init(100);
+		buildCounts.init();
 
 		// fix base buildings/science loadouts if there is a discrepancy
 		//baseBuilds.setSelf(get(builds));
@@ -438,8 +448,10 @@
 				allSubtracts.updateAll();
 				allBonuses.updateAll();
 				resDeltas.updateAll();
-			}, 2000)
+				updateCaps();
+			}, 1000)
 		}
+		console.log(get(buildCounts))
 
 		$unlockedResources = new Set([...$unlockedResources, 'kelp'])	
 
@@ -460,7 +472,7 @@
 			  	const delta = now - lastTick
 			  	lastTick = now
 			  	currRes = Object.entries(get(res));
-			  	addRes(100*delta/200);
+			  	addRes(1000*delta/200);
 			});
 		}, 200);
 
@@ -565,6 +577,24 @@
 		//policy.checkCriteria();
 	}
 
+			// resets caps then updates them again
+		// only use when initially loading the page, in case updates need to be applied
+		// bc it's slow
+	function updateCaps() {
+				for (let [type,val] of Object.entries($res)) {
+					console.log($baseRes[type][1]);
+					res.setCap(type, $baseRes[type][1]);
+				}
+				const b = get(builds)
+				for (let [key, val] of Object.entries($buildCounts)) {
+						if (b[key] && typeof key === 'string' && b[key]['caps']) {
+							for (let [k,v] of Object.entries(b[key]['caps'])) {
+	      						res.addCap(k, v*val[0]);
+	      					}
+	   				 	}
+				}
+	}
+
 //--------------
 
 	function changeTab(tab) {
@@ -609,13 +639,10 @@
 		let savestr = {}
 		savestr['res'] = get(res);
 		savestr['totalRes'] = get(res);
-		savestr['builds'] = get(builds);
 		savestr['buildCounts'] = get(buildCounts);
 		savestr['allGens'] = get(allGens);
 		savestr['allSubtracts'] = get(allSubtracts);
 		savestr['resDeltas'] = get(resDeltas)
-		savestr['science'] = get(science);
-		savestr['policy'] = get(policy);
 		savestr['fameTab'] = get(fameTab);
 		savestr['unlockedResources'] = [...$unlockedResources]; // convert set to array to store
 		savestr['jobs'] = get(jobs)
@@ -632,24 +659,21 @@
 		// const savedata = savestr.split("} ")
 		res.setSelf(savestr['res'] || get(baseRes));
 		totalRes.setSelf(savestr['totalRes'] || get(totalRes));
-		builds.setSelf(savestr['builds'] || get(baseBuilds));
-		science.setSelf(savestr['science'] || get(baseScience));
 		buildCounts.setSelf(savestr['buildCounts'] || get(baseBuildCounts));
-		policy.setSelf(savestr['policy'] || get(basePolicy));
 		fameTab.setSelf(savestr['fameTab'] || get(baseFameTab));
 		jobs.setSelf(savestr['jobs'] || get(baseJobs));
 		console.log(savestr['visible'])
 		console.log(savestr['researched'][1])
-		$visible = {
+		visible.setSelf({
 			builds: new Set(savestr['visible'][0]),
 			science: new Set(savestr['visible'][1]),
 			policy: new Set(savestr['visible'][2]),
-		}
-		$researched = {
+		})
+		researched.setSelf ({
 			builds: new Set(savestr['researched'][0]),
 			science: new Set(savestr['researched'][1]),
 			policy: new Set(savestr['researched'][2]),
-		}
+		})
 
 		console.log($visible)
 		console.log($researched)
@@ -692,25 +716,23 @@
     res.add('glory', bankAmt);
 
     fameTab.setSelf(get(baseFameTab));
+   $fameTab['gloryLevel'] = 1;
     policyTab.setSelf(get(basePolicyTab));
-		builds.setSelf(get(baseBuilds));
-		buildCounts.init(100);
-		science.setSelf(get(baseScience));
+		buildCounts.init();
 		science.lockAll();
 		policy.lockAll();
 		$unlockedResources = new Set(['kelp']);
-		$visible = {
+		visible.setSelf({
 			builds: new Set(),
 			science: new Set(),
 			policy: new Set(),
-		}
-		$researched = {
+		})
+		researched.setSelf({
 			builds: new Set(['kelp farm']),
 	 		science: new Set(),
 	 		policy: new Set()
-	 	}
+	 	})
 		activeTab = 'main';
-		policy.setSelf(get(basePolicy));
 		jobs.setSelf(get(baseJobs));
 		allGens.updateAll();
 		allSubtracts.updateAll();	
@@ -749,6 +771,9 @@
 		font-size: 14px;
 		color: white;
 	}
+	:global(.text-white) {
+		color:  white;
+	}
 	:global(.text-small) {
 		font-size: 14px;
 	}
@@ -762,12 +787,17 @@
   }
  :global(.game-btn-noafford) {
     border: 1px solid #696969;
-    color: #696969;
+    /*color: #696969;*/
+    cursor: pointer;
+  }
+ 	:global(.game-btn-nostorage) {
+    border: 1px solid #ef4444;
+    /*color: #d9363e;*/
     cursor: pointer;
   }
   :global(.game-btn) {
     border: 1px solid #c9c9c9;
-    color: #c9c9c9;
+    /*color: #c9c9c9;*/
     cursor: pointer;
   }
   :global(.game-btn-border) {
@@ -803,10 +833,14 @@
     color: #ed799a;
     cursor: pointer;
   }
-	:global(.game-btn-nostorage) {
-    border: 1px solid #853834;
-    color: #853834;
-    cursor: pointer;
+  :global(.text-white) {
+  	color:  white;
+  }
+  :global(.text-nostorage){
+  	color: #ef4444;
+  }
+  :global(.text-noafford){
+  	color: #696969;
   }
   .tooltip {
     @apply invisible absolute;

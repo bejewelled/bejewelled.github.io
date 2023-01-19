@@ -3,7 +3,7 @@
 import {writable, get} from 'svelte/store';
 // lmofao
 // @ts-ignore
-import {builds, allGens, allBonuses, allSubtracts} from './buildings.js';
+import {builds, allGens, allBonuses, allSubtracts, buildCounts} from './buildings.js';
 
 /**
  * @param {{ kelp: number[]; sand: number[]; wood: number[]; copper: number[]; iron: number[]; coal: number[]; science: number[]; fame: number[]; glory: number[]; }} info
@@ -30,6 +30,12 @@ function playerRes(info) {
 		      			i[type][0] += amt;
 		      			return i;
 		      		}      		
+		     })
+		},
+		craftAdd(type, amt) {
+			update(i => {
+		      			i[type][0] += amt;
+		      			return i;     		
 		     })
 		},
 		permanentUnlock(type) {
@@ -192,6 +198,11 @@ function playerRes(info) {
 				return i;
 			})
 		},
+		getSelf() {
+			update (i => {
+				return i;
+			})
+		},
 		clear() {
 			update(i => {
 				for (let c of Object.entries(i)) {
@@ -302,6 +313,7 @@ export const baseRes = playerRes({
 	coal: [0,50,0,0],
 	gold: [0,25,0,0],
 	science: [0,200,0,0],
+	favor: [0,50,0,0],
 	magic: [0,35,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0],
@@ -317,18 +329,41 @@ export const totalRes = playerRes({
 	coal: [0,50,0],
 	gold: [0,25,0],
 	science: [0,200,0],
+	favor: [0,200,0,0],
 	magic: [0,35,0,0],
 	fame: [0,-1,0],
 	glory: [0,-1,0],
 });
 
+// index 0: amount
+// index 1: is resource unlocked
+// index 2: lockout
+/* index 3: "tier" of crafted res
+   Each tier requires a different
+   technology to unlock.
+*/
 export const craftRes = playerRes({
-	plank: [0,0,0]
+	plank: [0,0,0,1],
+	tinder: [0,0,0,1],
+
 })
 
 export const baseCraftRes = playerRes({
-	plank: [0,0,0]
+	plank: [0,0,0,1],
 })
+
+export const craftCosts = basic({
+	plank: {
+		wood: 300
+	},
+	tinder: {
+		kelp: 2500,
+		sand: 100
+	}
+
+})
+
+export const craftTier = writable(0);
 
 export const unlockedResources = writable(new Set())
 

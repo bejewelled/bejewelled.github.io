@@ -141,7 +141,7 @@ function buildingCountCreator(info) {
 		/**
 		 * @param {number} len
 		 */
-		init(len) {
+		init() {
 			update(i => {
 				const names = Object.keys(get(builds))
 				for(let c = 0; c < names.length; c++) {
@@ -456,7 +456,7 @@ export const builds = buildings({
 		toggleable: false,
 		available: true,
 		criteria: [],
-		visible: false
+		
 	},
 	'pasture': {
 		id: 1,
@@ -477,7 +477,7 @@ export const builds = buildings({
 		toggleable: false,
 		available: true,
 		criteria: ['agriculture'],
-		visible: false
+		
 	},
 	'sand nets': {
 		id: 2,
@@ -495,9 +495,9 @@ export const builds = buildings({
 		bonuses: {},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: [],
-		visible: false
+		
 	},
 	'study': { 
 		id: 3,
@@ -516,9 +516,9 @@ export const builds = buildings({
 			science: 100,
 		},
 		toggleable: false,
-		available: false,
+		
 		criteria: [],
-		visible: false
+		
 	},
 	'silo': {
 		id: 4,
@@ -541,9 +541,9 @@ export const builds = buildings({
 			copper: 50
 		},
 		toggleable: false,
-		available: false,
+		
 		criteria: [],
-		visible: false
+		
 
 	},
 	'mill': {
@@ -566,9 +566,9 @@ export const builds = buildings({
 		},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: ['infrastructure'],
-		visible: false
+		
 
 	},
 	'furnace': {
@@ -594,9 +594,9 @@ export const builds = buildings({
 			wood: 0.04
 		},
 		toggleable: true,
-		available: false,
+		
 		criteria: ['heat'],
-		visible: false
+		
 
 	},
 	'statue': {
@@ -617,9 +617,9 @@ export const builds = buildings({
 		},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: ['writing'],
-		visible: false
+		
 	},
 	'observatory': {
 		id: 8,
@@ -639,9 +639,9 @@ export const builds = buildings({
 		},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: ['basic mathematics'],
-		visible: false
+		
 	},
 	'storehouse': {
 		id: 9,
@@ -667,9 +667,9 @@ export const builds = buildings({
 		},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: ['basic mathematics'],
-		visible: false
+		
 	},
 	'town hall': {
 		id: 10,
@@ -680,20 +680,22 @@ export const builds = buildings({
 			copper: 750,
 			fame: 100
 		},
-		ratio: 1.2,
+		ratio: 3,
 		gens: {
-			gold: 0.0004
+			gold: 0.0004,
+			favor: 0.15
 		},
 		caps: {
-			gold: 25
+			gold: 25,
+			favor: 10
 		},
 		bonuses: {
 		},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: ['government'],
-		visible: false
+		
 	},
 	'crypt': {
 		id: 11,
@@ -713,293 +715,13 @@ export const builds = buildings({
 		},
 		subtracts: {},
 		toggleable: false,
-		available: false,
+		
 		criteria: ['wizardry', 'basic mathematics'],
-		visible: false
+		
 	},
 
 })
-export const baseBuilds = buildings({
-		'kelp farm': {
-		id: 0,
-		name: 'Kelp Farm',
-		description: 'Harvests some kelp from the... void? Look, this isn\'t supposed to be hyper-realistic.',
-		costs: {
-			kelp: 20
-		},
-		ratio: 1.15,
-		gens: {
-			kelp: 0.2
-		},
-		bonuses: {},
-		subtracts: {},
-		caps: {},
-		toggleable: false,
-		available: true,
-		criteria: [],
-		visible: false
-	},
-	'pasture': {
-		id: 1,
-		name: 'Pasture',
-		description: 'Significantly increases kelp production.',
-		costs: {
-			copper: 10,
-			iron: 10
-		},
-		ratio: 1.12,
-		gens: {
-		},
-		caps: {},
-		bonuses: {
-			kelp: 8.5
-		},
-		subtracts: {},
-		toggleable: false,
-		available: true,
-		criteria: ['agriculture'],
-		visible: false
-	},
-	'sand nets': {
-		id: 2,
-		name: 'Sand Nets',
-		description: 'Catches sand and twigs from the sea floor.',
-		costs: {
-			kelp: 100
-		},
-		ratio: 1.25,
-		gens: {
-			sand: 0.012,
-			wood: 0.004
-		},
-		caps: {},
-		bonuses: {},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: [],
-		visible: false
-	},
-	'study': { 
-		id: 3,
-		name: 'Study',
-		description: 'The study allows turtles to converse and theorize about new scientific knowledge.',
-		costs: {
-			sand: 15,
-		},
-		ratio: 1.25,
-		gens: {
-			science: 0.03
-		},
-		bonuses: {},
-		subtracts: {},
-		caps: {
-			science: 100,
-		},
-		toggleable: false,
-		available: false,
-		criteria: [],
-		visible: false
-	},
-	'silo': {
-		id: 4,
-		name: 'Silo',
-		description: 'A place for your turtles to store excess stuff.',
-		costs: {
-			sand: 10,
-			wood: 1
-		},
-		ratio: 1.75,
-		gens: {
 
-		},
-		bonuses: {},
-		subtracts: {},
-		caps: {
-			kelp: 300,
-			sand: 100,
-			wood: 100,
-			copper: 50
-		},
-		toggleable: false,
-		available: false,
-		criteria: [],
-		visible: false
-
-	},
-	'mill': {
-		id: 5,
-		name: 'Mill',
-		description: 'A grinder for large rocks and twigs, the mill increases sand and wood output. Also dredges up some copper from time to time.',
-		costs: {
-			sand: 40,
-			wood: 10
-		},
-		ratio: 1.15,
-		gens: {
-			copper: 0.002
-		},
-		caps: {
-		},
-		bonuses: {
-			sand: 15,
-			wood: 15,
-		},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: ['infrastructure'],
-		visible: false
-
-	},
-	'furnace': {
-		id: 6,
-		name: 'Furnace',
-		description: 'Furnaces allow for a revolutionary increase in metal-producing power, at the cost of burnable materials.',
-		costs: {
-			sand: 300,
-			copper: 75
-		},
-		ratio: 1.15,
-		gens: {
-			copper: 0.15,
-			iron: 0.006,
-			coal: 0.006,
-		},
-		caps: {
-		},
-		bonuses: {
-		},
-		subtracts: {
-			kelp: 1.5,
-			wood: 0.04
-		},
-		toggleable: true,
-		available: false,
-		criteria: ['heat'],
-		visible: false
-
-	},
-	'statue': {
-		id: 7,
-		name: 'Statue',
-		description: 'Turtles have big egos; statues will let visitors know who\'s the best.',
-		costs: {
-			sand: 600,
-			wood: 100
-		},
-		ratio: 1.25,
-		gens: {
-			fame: 0.0002
-		},
-		caps: {
-		},
-		bonuses: {
-		},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: ['writing'],
-		visible: false
-	},
-	'observatory': {
-		id: 8,
-		name: 'Observatory',
-		description: 'Observatories allow turtles additional availability to record movement of the stars, increasing scientific effectiveness.',
-		costs: {
-			iron: 110
-		},
-		ratio: 1.18,
-		gens: {
-		},
-		caps: {
-			science: 500
-		},
-		bonuses: {
-			science: 30
-		},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: ['basic mathematics'],
-		visible: false
-	},
-	'storehouse': {
-		id: 9,
-		name: 'Storehouse',
-		description: 'Dramatically increases storage capability, enabling more advanced structures.',
-		costs: {
-			wood: 200,
-			copper: 200,
-			iron: 25
-		},
-		ratio: 1.18,
-		gens: {
-		},
-		caps: {
-			kelp: 1000,
-			sand: 750,
-			wood: 750,
-			copper: 300,
-			iron: 200,
-			coal: 200
-		},
-		bonuses: {
-		},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: ['basic mathematics'],
-		visible: false
-	},
-	'town hall': {
-		id: 10,
-		name: 'Town Hall',
-		description: 'Unlocks many new upgrades and produces luxury currency. Can be significantly improved later.',
-		costs: {
-			wood: 750,
-			copper: 750,
-			fame: 100
-		},
-		ratio: 1.2,
-		gens: {
-			gold: 0.0004
-		},
-		caps: {
-			gold: 25
-		},
-		bonuses: {
-		},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: ['government'],
-		visible: false
-	},
-	'crypt': {
-		id: 11,
-		name: 'Crypt',
-		description: 'Wonder what\'s inside...',
-		costs: {
-			iron: 666,
-			gold: 111
-		},
-		ratio: 1.25,
-		gens: {
-			magic: 0.02
-		},
-		caps: {},
-		bonuses: {
-			gold: 6.66
-		},
-		subtracts: {},
-		toggleable: false,
-		available: false,
-		criteria: ['wizardry', 'basic mathematics'],
-		visible: false
-	},
-
-})
 
 export const allGens = allGensCreator({
 	kelp: 0,

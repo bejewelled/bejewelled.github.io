@@ -1,5 +1,10 @@
 // lookup tables
 export default class tb {
+  static baseCaps() {
+    return {
+      
+    }
+  }
   
   // base difficulty based on resource required
   // only add here if difficulty > 1

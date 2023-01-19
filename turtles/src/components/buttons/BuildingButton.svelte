@@ -9,11 +9,11 @@
      on:mouseover={() => createUpdateInterval({id})} 
      on:mouseout={() => destroyUpdateInterval({id})} 
      on:click={() => buy({id})}
-     class='has-tooltip gameText py-1 items-center text-center border-solid ml-1 mr-1
+     class='has-tooltip gameText py-1 items-right text-center border-solid ml-1 mr-1
      {affordStyle} {toggleableBuild ? 'border-l-green-500 col-span-8' : 'col-span-12'}
-     select-none'>{text}
-              <span class='w-[250px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
-              <div class='text-white-500 mainText text-center'>{titleText}</div>
+     select-none'><span class='{textStyle}'>{text}</span>
+              <span class='w-[250px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16 mt-5'>
+              <div class='text-white-500 {textStyle} mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
               <div class='grid grid-flow-dense grid-rows items-baseline'>
@@ -21,9 +21,10 @@
               <div class="row">
                 <div class='grid items-start grid-cols-5 text-small'>
                 <div class="col-span-1 items-start text-left
-                {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.val}</div>
+                {line.type}">{line.val}</div>
                  <div class="col-span-4 text-right pr-1
-                 items-baseline {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.text}</div>
+                 items-baseline {line.type}">
+               {line.text}</div>
               </div>
             </div>
               {/each}
@@ -112,10 +113,15 @@
   let headerText = '';
   let tooltipText = [];
   let producerText = [];
-  let affordStyle;
+  let textStyle;
+  let affordStyle;  
   let toggleAffordStyle;
   let toggleableBuild = get(builds)[id.toLowerCase()]['toggleable'];
   let lockoutStyle;
+  const updateInterval = 800 + Math.random()*200 // random intervale
+  // random intervals are used to offset updates per component so there's no "studdering"
+  // where in one instance calculations need to be done for all components
+  // if all calculations take more than ~5ms it will be noticable
 
   const decround = (n, places) => {
     if (n < 1e3) return n.toLocaleString();
@@ -131,12 +137,14 @@
 
   onMount(() => { 
     id = id.toLowerCase();
-    getAffordStyle(id);   
+    getAffordStyle(id); 
+    getTextStyle(id);  
     affordStyleInterval = setInterval(() => {
       getAffordStyle(id);
+      getTextStyle(id);
       getToggleAffordStyle(id);
       getLockoutStyle(id);
-    }, 600);
+    }, updateInterval);
   })
 
   onDestroy(() => {
@@ -267,6 +275,25 @@
     toggleAffordStyle =  "game-btn-toggleon"; 
   }
 
+  function getTextStyle(bid) {
+    let canAfford = true;
+    for (let [type, val] of Object.entries(get(builds)[bid]['costs'])) {
+      let ratio = get(builds)[bid]['ratio']
+      let count = get(buildCounts)[bid.toLowerCase()][0]
+      let req = fm.geomSequenceSum(val,ratio, count);
+      if (get(res)[type][1] < req && get(res)[type][1] > 0) {
+      textStyle = 'text-nostorage';
+        return;
+      } else if (get(res)[type][0] < req) {
+        textStyle = "text-noafford";
+        canAfford = false;
+      }
+    }
+    if (canAfford) {
+      textStyle =  "text-white";   
+    }
+  }
+
   function getCostText(bid) {
     let list = []
     for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
@@ -276,8 +303,13 @@
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
       if (req > get(res)[type][1] && get(res)[type][1] > 0) {
-        console.log(get(res)['fame'][1])
         txt = txt + "*"
+        list.push({
+          type: 'text-nostorage',
+          val: type,
+          text: txt
+        });
+        continue;
       }
       if (get(res)[type][0] < req) {
         let remain = req - have;
@@ -286,13 +318,13 @@
         let timeText = (get(allGens)[type] != 0 && !isNaN(timeRemain) ? formatToTime(timeRemain) : 'inf');
         txt += " (" + timeText + ")"
         list.push({
-          type: 'noAfford',
+          type: 'text-noafford',
           val: type,
           text: txt
         });
       } else {
         list.push({
-          type: 'afford',
+          type: 'text-white',
           val: type,
           text: txt
         });
