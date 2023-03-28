@@ -26,6 +26,12 @@
 				{#each currRes as res}
 					{#if $unlockedResources.has(res[0])}
 
+							<!-- Divider between basic/special resources -->
+							{#if res[0] === 'science'}
+								<div class='lg:col-span-12 py-3'></div>							
+							{/if}
+
+							
 							<div class="lg:col-span-3 mainText">
 							<span class="{colors[res[0]] || colors['default']}">{res[0]}
 							</span></div>	
@@ -75,21 +81,23 @@
 										</span>
 									</div>
 									{/if}
-									{#if gloryProdBonus > 0}
+									{#if (gloryProdBonus-1) > 0}
 										<div class='grid row grid-cols-12 items-start pb-1'>
 											<span class='col-span-7 text-left'>
-												Glory (Production): 
+												Glory Level: 
 											</span>
 											<span class='col-span-5 text-right pr-1'>
-												+{round(gloryProdBonus * 100)}%
+												+{round((gloryProdBonus-1) * 100)}%
 											</span>
-										</div>	
+										</div>										
+									{/if}
+									{#if $stardustTab['basicUpgrades'][0] > 0}
 										<div class='grid row grid-cols-12 items-start pb-1'>
 											<span class='col-span-7 text-left'>
-												Glory (Conversion): 
+												Stardust (Aries):  
 											</span>
 											<span class='col-span-5 text-right pr-1'>
-												+{round(gloryProdBonus* 0.05 * 100)}%
+												+{round(($stardustBasics[0]['formula']($stardustTab['basicUpgrades'][0])-1) * 100)}%
 											</span>
 										</div>									
 									{/if}
@@ -134,22 +142,22 @@
 
 				<!-- Crafted Resource Display  -->
 				<div class='col-span-12 pt-5 pb-5 gameTextWhite'></div>
-				{#each Object.keys($craftRes) as cres}
-					{#if $craftRes[cres][1] > -2}
-							<div class="col-span-3 mainText py-1 text-left">
-								<span class="{colors[cres] || colors['default']}">{cres}</span>
+				{#each Object.entries($craftRes) as cres}
+					{#if $craftTier >= cres[1][3]}
+							<div class="col-span-3 mainText py-0 text-left">
+								<span class="{colors[cres[0]] || colors['default']}">{cres[0]}</span>
 							</div>
-							<div class="col-span-3 mainText py-1 gameTextWhite text-left">
-								<span class='text-white'>{$craftRes[cres][0]}</span>
+							<div class="col-span-3 mainText py-0 gameTextWhite text-left">
+								<span class='text-white'>{round($craftRes[cres[0]][0])}</span>
 							</div>
-							<div class="col-span-2 pr-1 py-1 mainText">
-								<CraftButton id={cres} amt=1 />
+							<div class="col-span-2 pr-1 py-0 mainText">
+								<CraftButton id={cres[0]} amt=1 />
 							</div>
-							<div class="col-span-2 pr-1 py-1 mainText">
-								<CraftButton id={cres} amt=50 />
+							<div class="col-span-2 pr-1 py-0 mainText">
+								<CraftButton id={cres[0]} amt=25 />
 							</div>
-							<div class="col-span-2 pr-1 py-1 mainText">
-								<CraftButton id={cres} amt=2000 />
+							<div class="col-span-2 pr-1 py-0 mainText">
+								<CraftButton id={cres[0]} amt=1000 />
 							</div>
 								
 					{/if}
@@ -188,32 +196,35 @@
 							</div>
 							{:else}
 							<div class='flex'>
-								<TabButton text='Lv 7'/>
+								<TabButton text='Lv 3'/>
 							</div>
 							{/if}
 						{/if}
-						{#if $fameTab['gloryLevel'] >= 3}
-							{#if $fameTab['gloryLevel'] >= 10}
+
+						{#if $fameTab['gloryLevel'] >= 1}
+							{#if $res['karma'][0] > 0 && $fameTab['gloryLevel'] >= 2}
 							<div class='flex'>
-								<TabButton on:click={() => changeTab('policy')} text='Policy'/>
+								<TabButton on:click={() => changeTab('religion')} text='Religion'/>
 							</div>
 							{:else}
 							<div class='flex'>
-								<TabButton text='Lv 10'/>
+								<TabButton text='Lv 4'/>
 							</div>
 							{/if}
 						{/if}
-						{#if $fameTab['gloryLevel'] >= 3}
-							{#if $fameTab['gloryLevel'] >= 13}
+
+						{#if $fameTab['gloryLevel'] >= 1}
+							{#if $fameTab['gloryLevel'] >= 1}
 							<div class='flex'>
-								<TabButton text='Policy'/>
+								<TabButton on:click={() => changeTab('stardust')} text='Stardust'/>
 							</div>
 							{:else}
 							<div class='flex'>
-								<TabButton text='Lv 13'/>
+								<TabButton text='Lv 5'/>
 							</div>
 							{/if}
 						{/if}
+
 					</div>
 				</div>
 
@@ -226,7 +237,8 @@
 							</div>
 							<!-- change the length each time you add a building !-->
 							{#each Object.entries($builds) as build}
-							{#if $visible['builds'].has(build[0].toLowerCase())}
+							{#if $researched['builds'].has(build[0].toLowerCase()) &&
+									 $visible['builds'].has(build[0].toLowerCase())}
 							<div class='p-1'>
 								<BuildingButton id={build[1]['name'].toLowerCase()}
 								text={build[1]['toggleable'] ? 
@@ -236,9 +248,8 @@
 							{/if}
 							{/each}
 
-							<div class='p-1'>
+							<div class='p-1'></div>
 
-							</div>
 						</div>
 					</div>
 				{/if}
@@ -261,11 +272,6 @@
 				{#if activeTab == 'fame'}
 					<div class='p-2'>
 					</div>
-					<div class='p-2 grid'>
-						<div class='row'>
-							<FameBankButton class='p-1'/>
-						</div> 
-					</div>
 					<br/>
 					<div>
 						<div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
@@ -274,7 +280,7 @@
 					</div> 
 					<div class='text-center gameTextWhite pt-1 mainText'>You are glory level <strong>{$fameTab['gloryLevel']}</strong></div>
 					<div class='text-center gameTextWhite'>You need {round(Math.max(gloryNextLevelTarget - $res.glory[0], 0))} glory to reach the next level.</div>
-					<div class='p-1 text-center mainText gameTextWhite'>Your glory level grants +{round(fm.calcGloryBonusProduction($fameTab['gloryLevel']) * 100)}% to all production.</div>
+					<div class='p-1 text-center mainText gameTextWhite'>Your glory level grants +{round((fm.calcGloryBonusProduction($fameTab['gloryLevel'])-1) * 100)}% to all production.</div>
 					<div class='p-3'> <hr/> </div>
 					<!--  Use a for loop when the quest backend is finished  -->
 					{#each $jobs as job}
@@ -299,14 +305,14 @@
 				{/if}
 
 				{#if activeTab == 'policy'}
-				<div class='p-3'></div>
+				<div class='py-2'></div>
 				<div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
   				<div class="mainText progbar-fame bg-green-300 h-2.5 rounded-full" style="width: {
   					($policyTab['policiesResearched'] % 10) * 10}% "></div>
 					</div>
 				<div class='text-center gameTextWhite pt-1 mainText'>Unlock {((($policyTab['policyLevel']+1) * 10) - ($policyTab['policiesResearched']))} more policies to gain a bonus to all of them. </div>
 
-				<div class='text-center gameTextWhite pt-1 mainText'>Current bonus to all policies: <strong>{round(fm.calcPolicyBonus($policyTab['policyLevel']))}%</strong></div>
+				<div class='text-center gameTextWhite pt-1 mainText'>Current bonus to all policies: <strong>{round(fm.calcPolicyGlobalBonus($policyTab['policyLevel']))}%</strong></div>
 				<div class='p-3'><hr/></div>
 				<label>
 					<input type=checkbox bind:checked={showUnlockedPolicy}>
@@ -323,6 +329,57 @@
 					{/each}
 				{/if}
 
+				{#if activeTab === 'religion'}
+					<div class='py-2'></div>
+					<KarmaConvertButton />
+					<div class='py-1'></div>
+					{#if $religionTab['karmaBanked'] > 0}
+						<div class='pb-1 gameTextWhite text-center'>Karma Banked: 
+						{round($religionTab['karmaBanked'])}</div>
+						<div class='pb-1 text-small-gray text-center'>
+							Converting more karma at once will give a bonus to the total amount.
+						</div>
+						<div class='py-2'></div>
+						<LightConvertButton />
+					{/if}
+				{/if}
+
+				{#if activeTab === 'stardust'}
+						<div class='py-2'></div>
+						<div class='pb-1 text-small-gray text-center'>
+							Ascending resets everything up to this point, but grants stardust in return.
+						</div>
+						<div class='pb-1 gameTextWhite text-center'>You will gain 
+							<strong>{stardustGain[0] >= 1000 ? round(stardustGain[0],3) : round(stardustGain[0],0)}
+								</strong> stardust if you ascend now.
+					</div>
+							<div class='text-small-gray text-center col-span-4 grid-cols-2'>
+								Base: +<strong>{round(stardustGain[1]+stardustGain[2]+stardustGain[5],3)}</strong> (glory, policies, magic)
+								</div>
+							<div class='text-small-gray text-center col-span-4'>
+								Multiplier: x<strong>{round(stardustGain[3]*stardustGain[4],3)}</strong> (religion, time)
+							</div>
+						<div class='py-1'></div>
+						<StardustResetButton resetFunc={() => stardustReset()}/>	
+						<div class='py-2'></div>
+						{#if $res['stardust'][0] > 0 || fm.sumArray($stardustTab['basicUpgrades']) > 0}
+							<div class='grid grid-cols-3 items-center'>
+								{#each $stardustBasics as star, i}
+								<div class='col-span-1 py-1'>
+									<StardustBasicUpgradeButton index={i} />
+								</div>
+								 {/each}
+							</div>
+							<div class='py-2'></div>
+							<div class='grid grid-cols-1 items-center'>
+								{#each $stardustGenerators as star, i}
+								<div class='col-span-1 py-1'>
+									<StardustGeneratorButton index={i} />
+								</div>
+								 {/each}
+							</div>
+					{/if}
+				{/if}
 				
 			</div>
 
@@ -333,7 +390,6 @@
 
 <script>
 // @ts-nocheck
-
 	import BuildingButton from '../components/buttons/BuildingButton.svelte';
 	import ScienceButton from '../components/buttons/ScienceButton.svelte';
 	import ClickButton from '../components/buttons/ClickButton.svelte';
@@ -341,18 +397,25 @@
 	import SaveLoadButton from '../components/buttons/SaveLoadButton.svelte';
 	import TabButton from '../components/buttons/TabButton.svelte';
 	import PolicyButton from '../components/buttons/PolicyButton.svelte'
-	import FameBankButton from '../components/buttons/FameBankButton.svelte';
 	import QuestSubmitButton from '../components/buttons/QuestSubmitButton.svelte';
 	import QuestRefreshButton from '../components/buttons/QuestRefreshButton.svelte';
 	import QuestUpgradeButton from '../components/buttons/QuestUpgradeButton.svelte';
-	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources, visible, researched } from '../data/player.js';
+	import KarmaConvertButton from '../components/buttons/KarmaConvertButton.svelte';
+	import LightConvertButton from '../components/buttons/LightConvertButton.svelte';
+	import StardustResetButton from '../components/buttons/StardustResetButton.svelte';
+	import StardustBasicUpgradeButton from '../components/buttons/StardustBasicUpgradeButton.svelte'
+	import StardustGeneratorButton from '../components/buttons/StardustGeneratorButton.svelte';
+	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources, visible, researched, craftTier, policyBonuses,
+	religionTab, stardustTab, baseStardustTab, flags} from '../data/player.js';
 	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseAllGens, baseBuildCounts } from '../data/buildings.js';
-	import { science, baseScience } from '../data/science.js';
+	import { science } from '../data/science.js';
 	import {jobs, baseJobs} from '../data/jobs.js'
+	import {stardustBasics, stardustGenerators} from '../data/stardust.js'
 	import { policy } from '../data/policy';
 	import {onMount, onDestroy} from 'svelte';
 	import {get} from 'svelte/store'
 	import fm from '../calcs/formulas.js'
+	import tb from '../calcs/tables.js'
 
 	// REACTIVE_VARS
 	$: numBuildings = Object.entries(get(builds)).length;
@@ -362,6 +425,19 @@
 	let checkResUnlockInterval;
 	$: currRes = Object.entries(get(res));
 	$: gloryBuffs = Object.entries(get(gloryBonuses));
+	let stardustGain = [0,0,0,0,0];
+	let timeBonusDisplay = 0;
+	$: {
+				stardustGain = fm.calcStardustGain(
+								$fameTab['gloryLevel'],
+								$policyTab['policiesResearched'],
+								//TODO: edit below call to include light (change the '0' to light value)
+								fm.calcKarmaPoints($religionTab['karmaBanked'], 0),
+								$stardustTab['lastReset'],
+							  $stardustTab['basicUpgrades'])
+
+			}
+		
 
 	let gloryVal = get(res)['glory'][0]
 	let gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel']);
@@ -380,10 +456,19 @@
 		glory: 'text-amber-300',
 		science: 'text-sky-500',
 		magic: 'text-indigo-500',
-		favor: 'text-emerald-300'
+		favor: 'text-emerald-500',
+		karma: 'text-teal-200',
+		stardust: 'text-fuchsia-400',
+
+		// craftable resources
+		steel: 'text-slate-400',
+		alloy: 'text-slate-400',
+		spring: 'text-slate-400',
+		journal: 'text-cyan-400'
 	}
 
 	// NONREACTIVE_VARS
+	let gloryLockout = true;
 	let activeTab = 'main';
 	let showUnlockedSciences = false;
 	let showUnlockedPolicy;
@@ -398,7 +483,7 @@
 	let findGloryNextTarget = (lv) => (Math.floor(Math.pow(1.1, lv) 
 		* 10 * Math.pow(lv,4) * 0.01) / 0.01)
 
-	let gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel']) 
+	let gloryNextLevelTarget = fm.findGloryNextTarget(get(fameTab)['gloryLevel']) 
 	console.log(gloryNextLevelTarget)
 
 	// number rounder. Use 3 decimals as default
@@ -429,11 +514,11 @@
 	// onMount
 	let lastTick = performance.now()
 	onMount(() => {
+
 		$unlockedResources = new Set();
 		console.log($unlockedResources)
 
-		// init build count list
-		buildCounts.init();
+
 
 		// fix base buildings/science loadouts if there is a discrepancy
 		//baseBuilds.setSelf(get(builds));
@@ -441,9 +526,12 @@
 		// if there is save data, load it
 		if (localStorage.getItem('data') !== null) {
 			const loader = setTimeout(() => {
-				load();
+				if (!(load())) {
+					buildCounts.init();
+				};
 				// adds new content, if needed
 				//();
+				console.log('update1')
 				allGens.updateAll();
 				allSubtracts.updateAll();
 				allBonuses.updateAll();
@@ -455,7 +543,6 @@
 
 		$unlockedResources = new Set([...$unlockedResources, 'kelp'])	
 
-		gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel']);
 		gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel']);
 		// start main game loop
 		let rid = requestAnimationFrame(function update() {
@@ -474,6 +561,10 @@
 			  	currRes = Object.entries(get(res));
 			  	addRes(1000*delta/200);
 			});
+			if ($flags['updateCapFlag']) {
+				updateCaps();
+				$flags['updateCapFlag'] = 0;
+			}
 		}, 200);
 
 		// save every 30s (this time doesn't have to be accurate so don't need to use dt)
@@ -487,12 +578,14 @@
 		checkResUnlockInterval = setInterval(() => { 
 			builds.checkSciCriteria();
 
+			// updates the time bonus display on the stardust tab
+			timeBonusDisplay = round(fm.calcTimeBonus($stardustTab['lastReset'], $stardustTab['basicUpgrades']),3);
 
 			// level up if player has enough glory for the next level
-			if (get(res)['glory'][0] >= gloryNextLevelTarget) {
+			if (get(res)['glory'][0] >= gloryNextLevelTarget && !gloryLockout) {
 				fameTab.add('gloryLevel', 1);
 				res.sub('glory', gloryNextLevelTarget)
-				gloryNextLevelTarget = findGloryNextTarget(get(fameTab)['gloryLevel'] + 1)
+				gloryNextLevelTarget = fm.findGloryNextTarget(get(fameTab)['gloryLevel'] + 1)
 				gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel'])
 			}
 			for (let c of Object.entries(get(builds))) {
@@ -523,7 +616,6 @@
 				}
 		}
 		let existingSci = get(science);
-		science.setSelf(get(baseScience));
 		//console.log(existingSci);
 		// baseScience.getSelf();
 		// const newSci = get(baseScience);
@@ -581,18 +673,24 @@
 		// only use when initially loading the page, in case updates need to be applied
 		// bc it's slow
 	function updateCaps() {
+				console.log('CAPS UPDATING')
 				for (let [type,val] of Object.entries($res)) {
-					console.log($baseRes[type][1]);
 					res.setCap(type, $baseRes[type][1]);
 				}
 				const b = get(builds)
 				for (let [key, val] of Object.entries($buildCounts)) {
+					console.log(key);
 						if (b[key] && typeof key === 'string' && b[key]['caps']) {
 							for (let [k,v] of Object.entries(b[key]['caps'])) {
-	      						res.addCap(k, v*val[0]);
+										const policyBonus = 1 + ($policyBonuses[key] || 0)
+	      						res.addCap(k, v*val[0]*policyBonus);
 	      					}
 	   				 	}
 				}
+				// stardust upgrade
+				const favorCapInc = $stardustTab['basicUpgrades'][3] * 5;
+				$res['favor'][1] += favorCapInc
+				
 	}
 
 //--------------
@@ -637,9 +735,12 @@
 		// const savebuildcounts = get(buildCounts);
 		// const savegens = get(allGens);
 		let savestr = {}
+		savestr['craftTier'] = get(craftTier)
 		savestr['res'] = get(res);
 		savestr['totalRes'] = get(res);
+		savestr['craftRes'] = get(craftRes);
 		savestr['buildCounts'] = get(buildCounts);
+		console.log(savestr['buildCounts'])
 		savestr['allGens'] = get(allGens);
 		savestr['allSubtracts'] = get(allSubtracts);
 		savestr['resDeltas'] = get(resDeltas)
@@ -648,45 +749,97 @@
 		savestr['jobs'] = get(jobs)
 		savestr['visible'] = [[...get(visible)['builds']], [...get(visible)['science']], [...get(visible)['policy']]]
 		savestr['researched'] = [[...get(researched)['builds']], [...get(researched)['science']], [...get(researched)['policy']]]
-		console.log(savestr['researched'])
-		console.log(savestr['visible']);
+		savestr['policyTab'] = get(policyTab);
+		savestr['religionTab'] = get(religionTab);
+		savestr['stardustTab'] = get(stardustTab);
+
 		savestr = btoa(JSON.stringify(savestr));
 		localStorage.setItem('data', savestr);
 	}
 
-	async function load() {
-		const savestr = JSON.parse(atob(localStorage.getItem('data')));
-		// const savedata = savestr.split("} ")
-		res.setSelf(savestr['res'] || get(baseRes));
-		totalRes.setSelf(savestr['totalRes'] || get(totalRes));
-		buildCounts.setSelf(savestr['buildCounts'] || get(baseBuildCounts));
-		fameTab.setSelf(savestr['fameTab'] || get(baseFameTab));
-		jobs.setSelf(savestr['jobs'] || get(baseJobs));
-		console.log(savestr['visible'])
-		console.log(savestr['researched'][1])
-		visible.setSelf({
-			builds: new Set(savestr['visible'][0]),
-			science: new Set(savestr['visible'][1]),
-			policy: new Set(savestr['visible'][2]),
-		})
-		researched.setSelf ({
-			builds: new Set(savestr['researched'][0]),
-			science: new Set(savestr['researched'][1]),
-			policy: new Set(savestr['researched'][2]),
-		})
+	function load() {
+		try {
 
-		console.log($visible)
-		console.log($researched)
 
-		$unlockedResources = new Set(Object.values(savestr['unlockedResources']));	
-		allGens.updateAll();
-		allSubtracts.updateAll();
-		allBonuses.updateAll();
-		resDeltas.updateAll();
-		builds.checkSciCriteria();
-		science.checkCriteria();
-		policy.checkCriteria();
-		policy.updateAll();
+			const savestr = JSON.parse(atob(localStorage.getItem('data')));
+			// const savedata = savestr.split("} ")
+			res.setSelf(savestr['res'] || get(baseRes));
+			craftRes.setSelf(savestr['craftRes'] || get (baseCraftRes));
+			// fixes any changes in the base res caps
+			// also adds any new resources to the player's local data
+			for (let [key, val] of Object.entries($baseRes)) {
+				if (!($res[key])) $res[key] = val;
+				if (val[1] != $res[key][1]) $res[key][1] = val[1];
+			}
+			for (let [key, val] of Object.entries($baseCraftRes)) {
+				if (!($craftRes[key])) $craftRes[key] = val;
+				if (val[1] != $craftRes[key][1]) $craftRes[key][1] = val[1];
+			}
+
+			totalRes.setSelf(savestr['totalRes'] || get(totalRes));
+			buildCounts.setSelf(savestr['buildCounts'] || get(baseBuildCounts));
+			fameTab.setSelf(savestr['fameTab'] || get(baseFameTab));
+			console.log()
+			jobs.setSelf(savestr['jobs'] || get(baseJobs));
+			$craftTier = savestr['craftTier'] || 0;
+			visible.setSelf({
+				builds: new Set(savestr['visible'][0]),
+				science: new Set(savestr['visible'][1]),
+				policy: new Set(savestr['visible'][2]),
+			})
+			researched.setSelf ({
+				builds: new Set(savestr['researched'][0]),
+				science: new Set(savestr['researched'][1]),
+				policy: new Set(savestr['researched'][2]),
+			})
+
+
+			$unlockedResources = new Set(Object.values(savestr['unlockedResources']));	
+
+			if (savestr['policyTab']) policyTab.setSelf(savestr['policyTab'])
+			policyTab.set('policyLevel', Math.floor($policyTab['policiesResearched'] / 10))
+			if (savestr['religionTab']) religionTab.setSelf(savestr['religionTab']);
+			if (savestr['stardustTab']) stardustTab.setSelf(savestr['stardustTab']);
+			policyBonuses.add('global', fm.calcPolicyGlobalBonus($policyTab['policyLevel']))
+			gloryProdBonus = fm.calcGloryBonusProduction($fameTab['gloryLevel']);
+			gloryNextLevelTarget = fm.findGloryNextTarget(get(fameTab)['gloryLevel']);
+			gloryLockout = false;
+			allGens.updateAll();
+			allSubtracts.updateAll();
+			allBonuses.updateAll();
+			resDeltas.updateAll();
+			builds.checkSciCriteria();
+			science.checkCriteria();
+			policy.checkCriteria();
+			policy.updateAll();
+			if ($stardustTab['basicUpgrades'].length < 12){
+				$stardustTab['basicUpgrades'] = [...$stardustTab['basicUpgrades'],0,0,0]
+			}
+			if (!($stardustTab['generators']) || $stardustTab['generators'].length < 4) {
+				$stardustTab['generators'] = [0,0,0,0]
+			}
+
+			for (let i of Object.entries($baseRes)) {
+				if ($res[i[0]] === undefined) {
+					$res[i[0]] = i[1];
+					$totalRes[i[0]] = i[1];
+				}
+			}
+
+			for (let i of Object.keys($builds)) {
+				if (!($buildCounts[i])) $buildCounts[i] = [0,0];
+			}
+
+
+			return true;
+		} catch (e) {
+			console.log(e)
+			alert('Loading Error! Press "OK" to reset the game, or try again.')
+			//reset();
+			return false;
+		} finally {
+			console.log('loading complete!')
+		}
 	}
 
 	// this will apply all science bonuses from any researched sciences
@@ -696,6 +849,58 @@
 				science.updateSpecialCase(i[0]);
 			}
 		}
+	}
+
+	function stardustReset() {
+		const s = stardustGain[0] + $res['stardust'][0];
+		$stardustTab['lastReset'] = Date.now();
+		baseRes.clear();
+		res.setSelf(get(baseRes));
+		craftRes.setSelf(get(baseCraftRes));
+		//automatic fame banking
+   	$fameTab['gloryLevel'] = 1;
+   	console.log($policyTab);
+    policyTab.reset();
+
+    // set job upgrades to level 0
+    for (let j of $fameTab['jobUpgrades']) {
+    	j['level'] = 0;
+    }
+
+		buildCounts.init();
+		science.lockAll();
+		policy.lockAll();
+		$unlockedResources = new Set(['kelp', 'stardust']);
+		visible.setSelf({
+			builds: new Set(),
+			science: new Set(),
+			policy: new Set(),
+		})
+		researched.setSelf({
+			builds: new Set(['kelp farm']),
+	 		science: new Set(),
+	 		policy: new Set()
+	 	})
+	 	builds.checkSciCriteria();
+	 	$craftTier = 0;
+		activeTab = 'main';
+		jobs.setSelf(get(baseJobs));
+		allGens.updateAll();
+		allSubtracts.updateAll();	
+		allBonuses.updateAll();
+		resDeltas.updateAll();
+		builds.hideAll();
+		//science.checkCriteria();
+		//initVisRes();
+		religionTab.reset();
+		$religionTab['karmaBanked'] = 0;
+		res.add('stardust', s);
+		totalRes.add('stardust', s);
+		res.add('kelp', 20);
+		console.log($policyTab['policiesResearched']);
+
+		save();
+		location.reload();
 	}
 
 	function reset() {
@@ -710,13 +915,15 @@
 		baseRes.clear();
 		console.log(get(baseRes));
 		res.setSelf(get(baseRes));
+		craftRes.setSelf(get(baseCraftRes));
 		//automatic fame banking
 		let bankAmt = get(res)['fame'][0]
-    res.set('fame', 0);
+    res.setItem('fame', 0);
     res.add('glory', bankAmt);
-
+    science.setSelf(get(science));
+    policy.setSelf(get(policy));
     fameTab.setSelf(get(baseFameTab));
-   $fameTab['gloryLevel'] = 1;
+   	$fameTab['gloryLevel'] = 1;
     policyTab.setSelf(get(basePolicyTab));
 		buildCounts.init();
 		science.lockAll();
@@ -732,6 +939,8 @@
 	 		science: new Set(),
 	 		policy: new Set()
 	 	})
+	 	builds.checkSciCriteria();
+	 	$craftTier = 0;
 		activeTab = 'main';
 		jobs.setSelf(get(baseJobs));
 		allGens.updateAll();
@@ -743,6 +952,9 @@
 		console.log($visible)
 		//initVisRes();
 		console.log(get(builds));
+
+		$religionTab['karmaBanked'] = 0;
+		stardustTab.setSelf($baseStardustTab);
 		localStorage.clear();
 		save();
 		location.reload();
@@ -787,17 +999,17 @@
   }
  :global(.game-btn-noafford) {
     border: 1px solid #696969;
-    /*color: #696969;*/
+    color: #696969;
     cursor: pointer;
   }
  	:global(.game-btn-nostorage) {
     border: 1px solid #ef4444;
-    /*color: #d9363e;*/
+    color: #d9363e;
     cursor: pointer;
   }
   :global(.game-btn) {
     border: 1px solid #c9c9c9;
-    /*color: #c9c9c9;*/
+    color: #c9c9c9;
     cursor: pointer;
   }
   :global(.game-btn-border) {

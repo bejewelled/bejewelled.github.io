@@ -2,7 +2,8 @@
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div 
-     on:mouseover={() => getCostText({id})} 
+     on:mouseover={() => getCostText({id})}
+     on:mouseover={() => getCraftCostText({id})} 
      on:mouseover={() => getHeaderText({id})}
      on:mouseover={() => getTitleText({id})} 
      on:mouseover={() => getProducerText({id})} 
@@ -12,12 +13,12 @@
      class='has-tooltip gameText py-1 items-right text-center border-solid ml-1 mr-1
      {affordStyle} {toggleableBuild ? 'border-l-green-500 col-span-8' : 'col-span-12'}
      select-none'><span class='{textStyle}'>{text}</span>
-              <span class='w-[285px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16 mt-5'>
+              <span class='w-[285px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16 mt-5 pointer-events-none'>
               <div class='text-white-500 {textStyle} mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
               <div class='grid grid-flow-dense grid-rows items-baseline'>
-              {#each tooltipText as line}
+              {#each costText as line}
               <div class="row">
                 <div class='grid items-start grid-cols-5 text-small'>
                 <div class="col-span-1 items-start text-left
@@ -25,6 +26,17 @@
                  <div class="col-span-4 text-right pr-1
                  items-baseline {line.type}">
                {line.text}</div>
+              </div>
+            </div>
+              {/each}
+              {#each craftCostText as line1}
+              <div class="row">
+                <div class='grid items-start grid-cols-5 text-small'>
+                <div class="col-span-2 items-start text-left
+                {line1.type}">{line1.val}</div>
+                 <div class="col-span-3 text-right pr-1
+                 items-baseline {line1.type}">
+               {line1.text}</div>
               </div>
             </div>
               {/each}
@@ -40,7 +52,7 @@
               {#if (get(policyBonuses)[id] !== undefined)}
                 <div class='row grid-rows-1 pt-1'>
                   <div class="grid text-small text-indigo-300 text-opacity-55">
-                    <div class="text-center">policy bonus: +{decround($policyBonuses[id] * 100)}%</div>
+                    <div class="text-center">policy bonus: +{decround((getPolicyBonusTotal(id)-1) * 100)}%</div>
                   </div>
                 </div>
               {/if}
@@ -100,7 +112,7 @@
 <script>
 // @ts-nocheck
 
-  import { res, policyBonuses } from '../../data/player.js';
+  import { res, policyBonuses, craftRes } from '../../data/player.js';
   import { builds, allGens, allBonuses, buildCounts, allSubtracts, resDeltas } from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
   import {get} from 'svelte/store'
@@ -111,14 +123,15 @@
   export let id;
   let titleText = '';
   let headerText = '';
-  let tooltipText = [];
+  let costText = [];
+  let craftCostText = [];
   let producerText = [];
   let textStyle;
   let affordStyle;  
   let toggleAffordStyle;
   let toggleableBuild = get(builds)[id.toLowerCase()]['toggleable'];
   let lockoutStyle;
-  const updateInterval = 800 + Math.random()*200 // random intervale
+  const updateInterval = 500 + Math.random()*200 // random interval
   // random intervals are used to offset updates per component so there's no "studdering"
   // where in one instance calculations need to be done for all components
   // if all calculations take more than ~5ms it will be noticable
@@ -130,6 +143,12 @@
     if (n >= 1e9 && n < 1e12) return +(n / 1e9).toFixed(places) + "B";
     if (n >= 1e12) return +(n / 1e12).toFixed(places) + "T";
   };
+
+  const getPolicyBonusTotal = (bid) => {
+    return 1 + 
+           ((get(policyBonuses)[bid] || 0) *
+           (1 + (get(policyBonuses)['global'] || 0)))
+  }
 
   let tooltipUpdateInterval;
   let checkResUnlockInterval;
@@ -164,7 +183,8 @@
   }
 
   function buy(bid) { 
-    let takes = {}   
+    let takes = {}  
+    let craftTakes = {} 
     for (let [type, val] of Object.entries(get(builds)[bid.id]['costs'])) {
       let ratio = get(builds)[bid.id]['ratio']
       let count = get(buildCounts)[bid.id.toLowerCase()][0]
@@ -176,7 +196,21 @@
         takes[type] = req;
       }
     }
+    if (get(builds)[bid.id]['craftCosts']) {   
+      for (let [type, val] of Object.entries(get(builds)[bid.id]['craftCosts'])) {
+        let ratio = get(builds)[bid.id]['ratio']
+        let count = get(buildCounts)[bid.id.toLowerCase()][0]
+        let req = fm.geomSequenceSum(val,ratio,count);
+        if (get(craftRes)[type][0] < req) {
+          return;
+        }
+        else {
+          craftTakes[type] = req;
+        }
+      }
+    }
     res.subMany(takes);
+    if (get(builds)[bid.id]['craftCosts']) craftRes.subMany(craftTakes);
     buildCounts.add(bid.id.toLowerCase(), 1);
     if (typeof get(builds)[bid.id]['caps'] != undefined) {
       res.addCapMany(get(builds)[bid.id]['caps']);
@@ -196,8 +230,10 @@
     }
     getTitleText(bid);
     getCostText(bid);
+    getCraftCostText(bid);
     getProducerText(bid);
     getAffordStyle(bid.id);
+    getTextStyle(bid.id);
     allGens.updateAll();
     allSubtracts.updateAll();
     allBonuses.updateAll();
@@ -255,11 +291,22 @@
       } else if (get(res)[type][0] < req) {
         affordStyle = "game-btn-noafford";
         canAfford = false;
+        continue;
       }
     }
-    if (canAfford) {
-      affordStyle =  "game-btn";   
+    if(get(builds)[bid]['craftCosts']) {
+    for (let [type, val] of Object.entries(get(builds)[bid]['craftCosts'])) {
+      let ratio = get(builds)[bid]['ratio']
+      let count = get(buildCounts)[bid.toLowerCase()][0]
+      let req = fm.geomSequenceSum(val,ratio, count);
+      if (get(craftRes)[type][0] < req) {
+        affordStyle = "game-btn-noafford";
+        canAfford = false;
+        return;
+      }
     }
+  }
+     if (canAfford) affordStyle =  "game-btn";   
   }
 
   function getToggleAffordStyle(bid) {
@@ -282,17 +329,29 @@
       let count = get(buildCounts)[bid.toLowerCase()][0]
       let req = fm.geomSequenceSum(val,ratio, count);
       if (get(res)[type][1] < req && get(res)[type][1] > 0) {
-      textStyle = 'text-nostorage';
+        textStyle = 'text-nostorage';
         return;
       } else if (get(res)[type][0] < req) {
-        textStyle = "text-noafford";
         canAfford = false;
+        textStyle = "text-noafford";
+        continue;
       }
     }
-    if (canAfford) {
-      textStyle =  "text-white";   
+    if (get(builds)[bid]['craftCosts']) {
+      for (let [type, val] of Object.entries(get(builds)[bid]['craftCosts'])) {
+        let ratio = get(builds)[bid]['ratio']
+        let count = get(buildCounts)[bid.toLowerCase()][0]
+        let req = fm.geomSequenceSum(val,ratio, count);
+        if (get(craftRes)[type][0] < req) {
+          textStyle = "text-noafford";
+          return;
+        }
+      }
     }
+     if (canAfford) textStyle =  "text-white";   
   }
+  
+
 
   function getCostText(bid) {
     let list = []
@@ -303,7 +362,11 @@
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
       if (req > get(res)[type][1] && get(res)[type][1] > 0) {
-        txt = txt + "*"
+        let remain = req - have;
+        // in seconds vv
+        let timeRemain = Math.round(remain / (5*get(resDeltas)[type]));
+        let timeText = (get(allGens)[type] != 0 && !isNaN(timeRemain) ? formatToTime(timeRemain) : 'inf')
+        txt = txt + "* (" + timeText + ")"
         list.push({
           type: 'text-nostorage',
           val: type,
@@ -330,7 +393,33 @@
         });
       }
     }
-    tooltipText = list;
+    costText = list;
+  }
+
+  function getCraftCostText(bid) {
+    if (!(get(builds)[bid.id]['craftCosts'])) return;
+    let list = []
+    for (let [type, val] of Object.entries(get(builds)[bid.id]['craftCosts'])) {
+      let ratio = get(builds)[bid.id]['ratio']
+      let count = get(buildCounts)[bid.id.toLowerCase()][0]
+      let req = fm.geomSequenceSum(val,ratio, count)
+      let have = get(craftRes)[type][0];
+      let txt = (decround(get(craftRes)[type][0], 3) + " / " + decround(req, 3)).toString();
+      if (get(craftRes)[type][0] < req) {
+        list.push({
+          type: 'text-noafford',
+          val: '[ ' + type + ' ]',
+          text: txt
+        });
+      } else {
+        list.push({
+          type: 'text-white',
+          val: '[ ' + type + ' ]',
+          text: txt
+        });
+      }
+    }
+    craftCostText = list;
   }
 
   function getProducerText(bid) {
@@ -344,7 +433,7 @@
         });
     }
     for (let [type, vRaw] of Object.entries(get(builds)[bid.id]['gens'])) {
-        const val = vRaw * (1 + (get(policyBonuses)[bid.id.toLowerCase()] || 0))
+        const val = vRaw * getPolicyBonusTotal(bid.id);
         let txt = (val > 0 ? '+' : '') + decround(val*5, 3).toString() + " / sec" 
         list.push({
           type: 'afford',
@@ -354,7 +443,7 @@
     }
     if (typeof get(builds)[bid.id]['caps'] != undefined) {
     for (let [type, val] of (Object.entries(get(builds)[bid.id]['caps']))) {
-        let txt = decround(val, 3).toString()
+        let txt = decround(val*getPolicyBonusTotal(bid.id), 3).toString()
         list.push({
           type: 'afford',
           val: type + ' cap:',
@@ -363,14 +452,15 @@
       }
     }
     if (!(get(builds)[bid.id]['bonuses'] === undefined)) {
-    for (let [type, val] of (Object.entries(get(builds)[bid.id]['bonuses']))) {
-        let txt = decround(val, 3).toString() + "%"
-        list.push({
-          type: 'afford',
-          val: type + ' bonus:',
-          text: txt
-        });
-      }
+      for (let [type, vRaw] of (Object.entries(get(builds)[bid.id]['bonuses']))) {
+          const val = vRaw * getPolicyBonusTotal(bid.id);
+          let txt = decround(val, 3).toString() + "%"
+          list.push({
+            type: 'afford',
+            val: type + ' bonus:',
+            text: txt
+          });
+        }
     }
     producerText = list;
   }

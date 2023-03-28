@@ -2,6 +2,7 @@
 <!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:mouseover={() => getCostText({id})} 
+     on:mouseover={() => getCraftCostText({id})} 
      on:mouseover={() => getHeaderText({id})}
      on:mouseover={() => getTitleText({id})} 
      on:mouseover={() => createUpdateInterval({id})} 
@@ -9,7 +10,7 @@
      on:click={() => buy({id})}
      class='has-tooltip mainText p-1 items-center text-center 
      {affordStyle} select-none'>{titleText}
-              <span class='w-[250px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
+              <span class='w-[290px] tooltip shadow-lg p-1 border-white border bg-[#222529] gameTextWhite mr-6'>
               <div class='text-white-500 mainText text-center'>{titleText}</div>
               <div class='title text-small-gray items-start text-center'>{headerText}</div>
               <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>
@@ -18,9 +19,19 @@
               <div class="row">
                 <div class='grid items-start text-small grid-cols-4'>
                 <div class="col-span-1 items-start text-left 
-                {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.val}</div>
+                {line['type']}">{line.val}</div>
                  <div class="col-span-3 text-right pr-1
-                 items-baseline {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.text}</div>
+                 items-baseline {line['type']}">{line.text}</div>
+              </div>
+            </div>
+              {/each} 
+              {#each craftCostText as line1}
+              <div class="row">
+                <div class='grid items-start text-small grid-cols-4'>
+                <div class="col-span-1 items-start text-left 
+                {line1['type']}">{line1.val}</div>
+                 <div class="col-span-3 text-right pr-1
+                 items-baseline {line1['type']}">{line1.text}</div>
               </div>
             </div>
               {/each} 
@@ -46,10 +57,12 @@
   let titleText = '';
   let headerText = '';
   let tooltipText = [];
+  let craftCostText = [];
   let bonusText = {};
   $: hasStorage = checkIfStorageAvailable(id);
   let affordStyle;
-  import { res, policyBonuses, policyTab, visible, researched } from '../../data/player.js';
+  let updateInterval = 400 + Math.random() * 200
+  import { res, craftRes, policyBonuses, policyTab, visible, researched, flags} from '../../data/player.js';
   import { policy } from '../../data/policy.js';
   import {builds, buildCounts, resDeltas} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -75,7 +88,7 @@
     getAffordStyle(id);   
     affordStyleInterval = setInterval(() => {
       getAffordStyle(id);
-    }, 200);
+    }, 200 + Math.random()*25);
   })
 
   onDestroy(() => {
@@ -86,8 +99,9 @@
     getBonusText(sid);
     tooltipUpdateInterval = setInterval(() => {
       getCostText(sid);
+      getCraftCostText(sid);
       getBonusText(sid);
-    }, 200);
+    }, updateInterval);
   }
 
   function destroyUpdateInterval(sid) {
@@ -96,10 +110,11 @@
 
   function buy(sid) { 
 
-    if ($visible['policy'].has(sid.id)) {
+    if ($researched['policy'].has(sid.id.toString())) {
       return;
     }
-    let takes = {}   
+    let takes = {} 
+    let craftTakes = {};  
     for (let [type, val] of Object.entries(get(policy)[sid.id]['costs'])) {
       let req = val;
       if (get(res)[type][0] < req) {
@@ -109,7 +124,21 @@
         takes[type] = req;
       }
     }
+
+    if ($policy[sid.id]['craftCosts']) {    
+      for (let [type, val] of Object.entries(get(policy)[sid.id]['craftCosts'])) {
+        let req = val;
+        if (get(craftRes)[type][0] < req) {
+          return;
+        }
+        else {
+          craftTakes[type] = req;
+        }
+      }
+    }
+
     res.subMany(takes);
+    craftRes.subMany(craftTakes);
     researched.setAdd(sid.id.toString().toLowerCase(),'policy')
  // adds to researched set (unlocks it)
     policy.checkCriteria();
@@ -118,9 +147,20 @@
       policyBonuses.add(i[0].toLowerCase(), i[1])
     }
     policyTab.add('policiesResearched', 1);
+    if ($policyTab['policiesResearched'] % 10 === 0) {
+      policyTab.add('policyLevel', 1);
+    }
+    console.log($policyTab['policiesResearched'])
+    policyBonuses.add('global', fm.calcPolicyGlobalBonus($policyTab['policyLevel']))
     getTitleText(sid);
     getAffordStyle(sid.id);
     getCostText(sid);
+    policy.checkCriteria();
+
+    if ($policy[sid.id]['updateCap']) {
+      $flags['updateCapFlag'] = 1;
+    }
+
   }
 
   function checkIfStorageAvailable(sid) {
@@ -130,31 +170,38 @@
     let canAfford = true;
     for (let [type, val] of Object.entries(get(policy)[bid]['costs'])) {
       let req = val;
-      if (get(res)[type][1] < req) {
+      if (get(res)[type][1] < req && get(res)[type][1] > 0) {
         affordStyle = 'game-btn-nostorage';
         return;
       } else if (get(res)[type][0] < req) {
         affordStyle = "game-btn-noafford";
         canAfford = false;
+        return;
       }
     }
-    if (canAfford) {
+    if ($policy[bid]['craftCosts']) { 
+      for (let [type, val] of Object.entries(get(policy)[bid]['craftCosts'])) {
+         let req = val;
+      if (get(craftRes)[type][0] < req) {
+           affordStyle = "game-btn-noafford";
+           canAfford = false;
+           return;
+         }
+       }
+     }
       affordStyle =  "game-btn";   
-    }
   }
 
   function getTitleTextNoobject(sid) {
-    console.log(get(policy))
-    console.log(get(policy)[sid])
     titleText = get(policy)[sid]['name'];
-    if ($visible['policy'].has(sid) == true) {
+    if ($researched['policy'].has(sid.id)) {
           titleText += ' (researched)'
     }
   }
 
   function getTitleText(sid) {
     titleText = get(policy)[sid.id]['name'];
-    if ($visible['policy'].has(sid.id) == true) {
+    if ($researched['policy'].has(sid.id)) {
           titleText += ' (researched)'
     }
   }
@@ -183,9 +230,18 @@
       let req = val;
       let have = get(res)[type][0];
       let txt = (decround(get(res)[type][0], 3) + " / " + decround(req, 3)).toString();
-      if (req > get(res)[type][1]) {
-        txt = txt + "*"
-
+      let remain = req - have;
+        // in seconds vv
+      let timeRemain = Math.round(remain / (5*get(resDeltas)[type]));
+      let timeText = (get(allGens)[type] != 0 ? formatToTime(timeRemain) : 'inf');
+      if (req > get(res)[type][1] && get(res)[type][1] > 0) {
+        txt = txt + "* (" + timeText + ")"
+        list.push({
+          type: 'text-nostorage',
+          val: type,
+          text: txt
+        });
+        continue;
       }
       if (get(res)[type][0] < req) {
         let remain = req - have;
@@ -194,10 +250,11 @@
         let timeText = (get(allGens)[type] != 0 ? formatToTime(timeRemain) : 'inf');
         txt += " (" + timeText + ")"
         list.push({
-          type: 'noAfford',
+          type: 'text-noafford',
           val: type,
           text: txt
         });
+        continue;
       } else {
         list.push({
           type: 'afford',
@@ -207,6 +264,30 @@
       }
     }
     tooltipText = list;
+  }
+
+  function getCraftCostText(sid) {
+    if (!(get(policy)[sid.id]['craftCosts'])) return;
+    let list = []
+    for (let [type, val] of Object.entries(get(policy)[sid.id]['craftCosts'])) {
+      let req = val;
+      let have = get(craftRes)[type][0];
+      let txt = (decround(get(craftRes)[type][0], 3) + " / " + decround(req, 3)).toString();
+      if (get(craftRes)[type][0] < req) {
+        list.push({
+          type: 'text-noafford',
+          val: '[ ' + type + ' ]',
+          text: txt
+        });
+      } else {
+        list.push({
+          type: 'text-white',
+          val: '[ ' + type + ' ]',
+          text: txt
+        });
+      }
+    }
+    craftCostText = list;
   }
 
 

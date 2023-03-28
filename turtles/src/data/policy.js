@@ -1,7 +1,7 @@
 // @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
-import { science, baseScience } from './science.js';
+import { science} from './science.js';
 import {res, policyBonuses, policyTab, visible, researched} from './player.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { policy: number; }; researched: boolean; available: boolean; 
@@ -75,12 +75,15 @@ function policyCreator(info) {
 				for (let b of Object.entries(i)) {
 					let isSatisfied = true;
 					for (let req of b[1]['criteria']) {
-						if (!(get(researched)['policy'].has(req))) {
+						
+						if (!(get(researched)['policy'].has(req.toString()))) {
 							isSatisfied = false;
+							visible.setRem(b[0], 'policy')
+							break;
 						}
 
 					}
-					if (isSatisfied === true) {
+					if (isSatisfied) {
 						visible.setAdd(b[0], 'policy')
 					}
 				}
@@ -100,7 +103,8 @@ function policyCreator(info) {
 		},
 		// gets total number of policies researched
 		getPnum() {
-			return get(policyTab)['policiesResearched']
+			return get(policyTab)['policiesResearched'] 
+
 		},	
 		/**
 		 * @param {string | number} sci
@@ -109,12 +113,8 @@ function policyCreator(info) {
 			update (i => {
 				policyBonuses.setSelf({});
 				for (let [key, val] of Object.entries(i)) {
-					console.log(key)
-					console.log(val);
-					if (val['researched'] === true) {
+					if (get(researched)['policy'].has(key)) {
 						for (let [k, v] of Object.entries(val['bonuses'])) {
-							console.log(k)
-							console.log(v);
 							policyBonuses.add(k.toLowerCase(), (policyBonuses[k.toLowerCase()] || 0) + v);
 						}
 					}
@@ -177,10 +177,10 @@ export const policy = policyCreator({
 		description: 'Using a mysterious substance, your kelp farms can be drastically improved.',
 		costs: {
 			science: 800,
-			favor: 50
+			favor: 10
 		},
 		bonuses: {
-			'Kelp Farm': 0.75
+			'kelp farm': 0.75
 		},
 		criteria: []
 	},
@@ -192,10 +192,10 @@ export const policy = policyCreator({
 		description: 'Improve the quality of fertilizer, increasing kelp production.',
 		costs: {
 			science: 35000,
-			favor: 250
+			favor: 55
 		},
 		bonuses: {
-			'Kelp Farm': 0.75
+			'kelp farm': 0.75
 		},
 		criteria: [0]
 	},
@@ -207,10 +207,10 @@ export const policy = policyCreator({
 		description: 'With drastic advancements in soil micronutrients, your turtles\' fertilizer has become absurdly effective.',
 		costs: {
 			science: 225000,
-			favor: 1300
+			favor: 90
 		},
 		bonuses: {
-			'Kelp Farm': 0.9
+			'kelp farm': 0.9
 		},
 		criteria: [1]
 	},
@@ -222,10 +222,10 @@ export const policy = policyCreator({
 		description: 'Do you even NEED this much kelp?',
 		costs: {
 			science: 2.4e6,
-			favor: 3000
+			favor: 140
 		},
 		bonuses: {
-			'Kelp Farm': 1.25
+			'kelp farm': 1.25
 		},
 		criteria: [2]
 	},
@@ -237,10 +237,10 @@ export const policy = policyCreator({
 		description: 'I mean come on, this is just ridiculous.',
 		costs: {
 			science: 6e7,
-			favor: 5000
+			favor: 200
 		},
 		bonuses: {
-			'Kelp Farm': 1.25
+			'kelp farm': 1.25
 		},
 		criteria: [3]
 	},
@@ -253,7 +253,7 @@ export const policy = policyCreator({
 		costs: {
 			science: 1900,
 			iron: 525,
-			favor: 50
+			favor: 10
 		},
 		bonuses: {
 			'sand nets': 0.35,
@@ -272,13 +272,311 @@ export const policy = policyCreator({
 			iron: 4000,
 			copper: 4000,
 			gold: 250,
-			favor: 300
+			favor: 45
 		},
 		bonuses: {
 			'sand nets': 0.9,
 			'mill': 0.25
 		},
-		criteria: [1]
+		criteria: [100]
+	},
+	102: {
+		id: 102,
+		// name of the building + tier of policy
+		code: "sand net 1",
+		name: 'Steel Nets',
+		description: 'Incredible innovations in woven fabric allow steel to be directly integrated with cloth!',
+		costs: {
+			science: 25000,
+			iron: 4000,
+			copper: 4000,
+			gold: 250,
+			favor: 90
+		},
+		craftCosts: {
+			plank: 425
+		},
+		bonuses: {
+			'sand nets': 0.9,
+			'mill': 0.25
+		},
+		criteria: [101]
+	},
+	200: {
+		id: 200,
+		// name of the building + tier of policy
+		code: "pasture 1",
+		name: 'Greener Pastures I',
+		description: 'Your cow-- uh, turtles. Your TURTLES will love it.',
+		costs: {
+			science: 2300,
+			favor: 10
+		},
+		bonuses: {
+			'pasture': 0.25
+		},
+		criteria: []
+	},
+	300: {
+		id: 300,
+		// name of the building + tier of policy
+		code: "study 1",
+		name: 'Updated Literature I',
+		description: 'We replaced all the first-edition textbooks with second-edition ones.',
+		costs: {
+			science: 2800,
+			fame: 400,
+			favor: 10
+		},
+		bonuses: {
+			'study': 0.3
+		},
+		criteria: []
+	},
+	400: {
+		id: 400,
+		// name of the building + tier of policy
+		code: "mill 1",
+		name: 'Strong Grinders I',
+		description: 'These bad boys can crush anything in sight!',
+		costs: {
+			science: 3250,
+			iron: 2700,
+			favor: 10
+		},
+		craftCosts: {
+			plank: 15
+		},
+		bonuses: {
+			'mill': 0.15
+		},
+		criteria: []
+	},
+	500: {
+		id: 500,
+		// name of the building + tier of policy
+		code: "furnace 1",
+		name: 'Blast Furnace I',
+		description: 'Higher temperatures increase the efficacy of metal-smelting.',
+		costs: {
+			science: 3600,
+			copper: 1200,
+			favor: 10
+		},
+		craftCosts: {
+			tinder: 20
+		},
+		bonuses: {
+			'furnace': 0.04
+		},
+		criteria: [100]
+	},
+	600: {
+		id: 600,
+		// name of the building + tier of policy
+		code: "statue 1",
+		name: 'Golden Trim I',
+		description: 'More prestige, more!',
+		costs: {
+			science: 4000,
+			gold: 80,
+			favor: 10
+		},
+		bonuses: {
+			'statue': 2.50
+		},
+		criteria: [200]
+	},
+	601: {
+		id: 601,
+		// name of the building + tier of policy
+		code: "statue 2",
+		name: 'Golden Trim II',
+		description: 'It\'s so shiny...,',
+		costs: {
+			science: 46500,
+			gold: 1000,
+			favor: 75
+		},
+		bonuses: {
+			'statue': 1.50
+		},
+		criteria: [600]
+	},
+	700: {
+		id: 700,
+		// name of the building + tier of policy
+		code: "observatory 1",
+		name: 'Stronger Magnification',
+		description: '',
+		costs: {
+			science: 8000,
+			favor: 25
+		},
+		bonuses: {
+			'observatory': 0.25
+		},
+		criteria: [200]
+	},
+	800: {
+		id: 800,
+		// name of the building + tier of policy
+		code: "town hall 1",
+		name: 'Town Hall I',
+		description: '[placeholder]',
+		costs: {
+			science: 7000,
+			favor: 75
+		},
+		bonuses: {
+			'town hall': 0.33
+		},
+		criteria: [300]
+	},
+	900: {
+		id: 900,
+		// name of the building + tier of policy
+		code: "oil well 1",
+		name: 'Oil Well I',
+		description: '[placeholder]',
+		costs: {
+			science: 8000,
+			oil: 100,
+			favor: 25
+		},
+		bonuses: {
+			'oil well': 0.3
+		},
+		criteria: [400]
+	},
+	1000: {
+		id: 1000,
+		// name of the building + tier of policy
+		code: "temple 1",
+		name: 'Temple I',
+		description: '[placeholder]',
+		costs: {
+			science: 900,
+			karma: 5000,
+			favor: 30
+		},
+		bonuses: {
+			'town hall': 0.33
+		},
+		criteria: [500]
+	},
+	1100: {
+		id: 1100,
+		// name of the building + tier of policy
+		code: "blast heater 1",
+		name: 'Blast Heater I',
+		description: '[placeholder]',
+		costs: {
+			science: 9000,
+			favor: 30
+		},
+		bonuses: {
+			'blast heater': 0.075
+		},
+		criteria: [500]
+	},
+	1200: {
+		id: 1200,
+		// name of the building + tier of policy
+		code: "treasury 1",
+		name: 'Treasury I',
+		description: '[placeholder]',
+		costs: {
+			science: 10000,
+			favor: 35
+		},
+		bonuses: {
+			'treasury': 0.125
+		},
+		criteria: [600]
+	},
+	10000: {
+		id: 10000,
+		// name of the building + tier of policy
+		code: "storehouse 1",
+		name: 'Storehouse I',
+		description: '[placeholder]',
+		costs: {
+			science: 3500,
+			favor: 30
+		},
+		bonuses: {
+			'storehouse': 0.15
+		},
+		updateCap: true, // if cap needs to be updated 
+		criteria: []
+	},
+	10001: {
+		id: 10001,
+		// name of the building + tier of policy
+		code: "storehouse 2",
+		name: 'Storehouse II',
+		description: '[placeholder]',
+		costs: {
+			science: 30000,
+			favor: 110
+		},
+		bonuses: {
+			'storehouse': 0.25
+		},
+		updateCap: true, // if cap needs to be updated 
+		criteria: [10000]
+	},
+
+
+
+	99900: {
+		id: 99900,
+		// name of the building + tier of policy
+		code: "global 1",
+		name: 'Efficiency I',
+		description: 'Turtles on overdrive.',
+		costs: {
+			science: 10000,
+			favor: 25
+		},
+		bonuses: {
+			'global': 0.04
+		},
+		updateCap: true,
+		criteria: []
+	},
+	99901: {
+		id: 99901,
+		// name of the building + tier of policy
+		code: "global 1",
+		name: 'Efficiency II',
+		description: 'Never stop. Keep grinding.',
+		costs: {
+			science: 240000,
+			favor: 90
+		},
+		bonuses: {
+			'global': 0.06
+		},
+		updateCap: true,
+		criteria: [99900]
+	},
+	99902: {
+		id: 99902,
+		// name of the building + tier of policy
+		code: "global 1",
+		name: 'Efficiency III',
+		description: 'Going past this point may cause some... unexpected consequences.',
+		costs: {
+			science: 5e6,
+			favor: 210
+		},
+		bonuses: {
+			'global': 0.10
+		},
+		updateCap: true,
+		criteria: [99901]
 	},
 
 })

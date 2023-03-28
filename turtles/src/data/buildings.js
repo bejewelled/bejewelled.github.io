@@ -2,8 +2,9 @@
 // @ts-nocheck
 import {get, writable} from 'svelte/store'
 import {science} from './science.js'
-import {res, fameTab, policyBonuses, policyTab, visible, researched} from './player.js'
+import {res, fameTab, policyBonuses, policyTab, visible, researched, stardustTab} from './player.js'
 import {policy} from './policy.js' // if slowdowns occur try moving getPnum() to player.js
+import {stardustBasics} from './stardust.js'
 import fm from '../calcs/formulas.js'
 /**
  * @param {{ 0: { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { kelp: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { kelp: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 1: { id: number; name: string; description: string; costs: { copper: number; iron: number; }; ratio: number; gens: {}; caps: {}; bonuses: { kelp: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { copper: number; iron: number; }; ratio: number; gens: {}; caps: {}; bonuses: { kelp: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 2: { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { sand: number; wood: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { kelp: number; }; ratio: number; gens: { sand: number; wood: number; }; caps: {}; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 3: { id: number; name: string; description: string; costs: { sand: number; }; ratio: number; gens: { science: number; }; caps: { science: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; }; ratio: number; gens: { science: number; }; caps: { science: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 4: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: { kelp: number; sand: number; wood: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: { kelp: number; sand: number; wood: number; }; toggleable: boolean; available: boolean; criteria: never[]; visible: boolean; }; 5: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: {}; bonuses: { wood: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: {}; caps: {}; bonuses: { wood: number; }; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 6: { id: number; name: string; description: string; costs: { sand: number; copper: number; }; ratio: number; gens: { kelp: number; wood: number; copper: number; iron: number; coal: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; copper: number; }; ratio: number; gens: { kelp: number; wood: number; copper: number; iron: number; coal: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; 7: { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: { fame: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; } | { id: number; name: string; description: string; costs: { sand: number; wood: number; }; ratio: number; gens: { fame: number; }; caps: {}; bonuses: {}; toggleable: boolean; available: boolean; criteria: number[]; visible: boolean; }; }} info
@@ -245,12 +246,15 @@ function allGensCreator(info) {
 					// let next = Object.entries(i).reduce((acc, [key, value]) => 
 				 //  ({ ...acc, [key]: (acc[key] || 0) + (value*curr['count'])}), { ...curr['gens'] });
 					for (let [ck, cv] of Object.entries(curr['gens'])) {
-						
+						const currCount = (curr['toggleable'] ?
+							(cts[k[0]] ? cts[k[0]][1] : 0) :
+							(cts[k[0]] ? cts[k[0]][0] : 0)) // building count (checks for undefined)
 					
-						if (curr['toggleable'] && hasRes) {
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][1]*resDeltas.getTotalBonus(k)
-						} else if (hasRes) {
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][0]*resDeltas.getTotalBonus(k)
+						if (hasRes) {
+							i[ck] = (i[ck] || 0) + cv*currCount*resDeltas.getPolicyBonus(k)
+						// } else if (hasRes) {
+						// 	i[ck] = (i[ck] || 0) + cv*(cts[k[0]][0] || 0)*resDeltas.getPolicyBonus(k)
+						// }
 						}
 					}
 				}
@@ -286,6 +290,7 @@ function allBonusCreator(info) {
 				let hasRes = true;
 				for (let k of b) {
 					let curr = k[1];
+					// checks for lockout
 					if (curr['subtracts']) {
 						for (let x of Object.entries(curr['subtracts'])) {
 							if (get(res)[x[0]][3] == 1) {
@@ -301,11 +306,14 @@ function allBonusCreator(info) {
 				 	// console.log(curr)
 				 	// console.log(k);
 					for (let [ck, cv] of Object.entries(curr['bonuses'])) {
-						if (curr['toggleable'] && hasRes) {
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][1];
-						} else if (hasRes) {
-							i[ck] = (i[ck] || 0) + cv*cts[k[0]][0];
+						const currCount = (curr['toggleable'] ?
+							(cts[k[0]] ? cts[k[0]][1] : 0) :
+							(cts[k[0]] ? cts[k[0]][0] : 0)) // building count (checks for undefined)
+
+						if (hasRes) {
+							i[ck] = (i[ck] || 0) + cv*currCount*resDeltas.getTotalBonus(k);
 						}
+						
 					}
 				}
 			}
@@ -372,12 +380,29 @@ function resDeltasCreator(info) {
 	      		return i;
       		})
 		},
+		// policy bonus only
+		getPolicyBonus(k) {
+			const multi = (1+(get(policyBonuses)[k[0].toLowerCase()] || 0)) // policy bonus
+			* (1+(get(policyBonuses)['global'] || 0))
+			* (1 + (k[1]['toggleable'] ? get(policyBonuses)['toggle'] || 0 : 0))
+			return multi;
+		},
+		getNonPolicyBonus(k) {
+			const gloryBonus = fm.calcGloryBonusProduction(get(fameTab)['gloryLevel'])
+			let multi = (gloryBonus) // add in glory bonus
+			* ((!(k[1]['toggleable']) ?  // stardust bonus
+				(get(stardustBasics)[0]['formula'](get(stardustTab)['basicUpgrades'][0]) || 1) : 0)); 
+			return multi;
+		},
 		getTotalBonus(k) { 
 			const gloryBonus = fm.calcGloryBonusProduction(get(fameTab)['gloryLevel'])
 			const multi = (1+(get(policyBonuses)[k[0].toLowerCase()] || 0)) // policy bonus
-			* (1+(get(policyBonuses)['global'] || 0))// multiplicative global bonus
+			*(1+(get(policyBonuses)['global'] || 0))// multiplicative global policy bonus
 			* (1 + (k[1]['toggleable'] ? get(policyBonuses)['toggle'] || 0 : 0)) // multiplicative toggle bonus, if applicable
-			* (1+(gloryBonus*0.05)); // add in glory bonus 
+			* (gloryBonus) // add in glory bonus
+			* ((!(k[1]['toggleable']) ?  // stardust bonus
+				(get(stardustBasics)[0]['formula'](get(stardustTab)['basicUpgrades'][0]) || 1) : 1)); 
+			//if (k[0].toLowerCase() == 'mill') console.log(k);
 			return multi;
 		},
 		updateAll() {
@@ -404,33 +429,43 @@ function resDeltasCreator(info) {
 
 					// add generation
 					for (let [ck, cv] of Object.entries(curr['gens'])) {
-						if (curr['toggleable'] && hasRes) {
-							i[ck] = ((i[ck] || 0) + cv*cts[k[0]][1])*this.getTotalBonus(k)
-						} else if (hasRes) {
-							i[ck] = ((i[ck] || 0) + cv*cts[k[0]][0])*this.getTotalBonus(k)
+						const currCount = (curr['toggleable'] ?
+							(cts[k[0]] ? cts[k[0]][1] : 0) :
+							(cts[k[0]] ? cts[k[0]][0] : 0)) // building count (checks for undefined)
+
+						if (hasRes) {
+							i[ck] = (i[ck] || 0) + cv*currCount*this.getTotalBonus(k);
 						}
+//						if (ck == 'copper') console.log(i[ck])
 					}
+
 					// subtract consumption
 					for (let [ck, cv] of Object.entries(curr['bonuses'])) {
-						if (curr['toggleable'] && hasRes) {
-							i[ck] *= (1 + (cv/100)*cts[k[0]][1]);
-						} else if (hasRes) {
-							i[ck] *= (1 + (cv/100)*cts[k[0]][0]);
+						const currCount = (curr['toggleable'] ?
+							(cts[k[0]] ? cts[k[0]][1] : 0) :
+							(cts[k[0]] ? cts[k[0]][0] : 0)) // building count (checks for undefined)
+						if (hasRes) {
+							i[ck] = (i[ck] || 0) * (1+(cv/100)*currCount)*this.getPolicyBonus(k);
 						}
+//						if (ck == 'copper') console.log(i[ck])
 					}
+						
+
 					for (let [ck, cv] of Object.entries(curr['subtracts'])) {
 						if (curr['toggleable']) {
 							i[ck] = (i[ck] || 0) - cv*cts[k[0]][1];
 						} else {
 							i[ck] = (i[ck] || 0) - cv*cts[k[0]][0];
 						}
+//						if (ck == 'copper') console.log(i[ck])
 					}
+
 					// multiply by building bonuses
 					// multiply by policy bonuses
-					for (let [ck, cv] of Object.entries(get(allPolicies))) {
-							i[ck] *= (1 + (cv/100) || 1);
-						}
-					}
+					// for (let [ck, cv] of Object.entries(get(allPolicies))) {
+					// 		i[ck] *= (1 + (cv/100) || 1);
+					// 	}
+				}
 
 				return i;
 			})
@@ -508,12 +543,12 @@ export const builds = buildings({
 		},
 		ratio: 1.25,
 		gens: {
-			science: 0.03
+			science: 90.03
 		},
 		bonuses: {},
 		subtracts: {},
 		caps: {
-			science: 100,
+			science: 10000,
 		},
 		toggleable: false,
 		
@@ -609,7 +644,7 @@ export const builds = buildings({
 		},
 		ratio: 1.25,
 		gens: {
-			fame: 0.0002
+			fame: 0.0006
 		},
 		caps: {
 		},
@@ -680,14 +715,14 @@ export const builds = buildings({
 			copper: 750,
 			fame: 100
 		},
-		ratio: 3,
+		ratio: 5,
 		gens: {
 			gold: 0.0004,
-			favor: 0.15
+			favor: 0.05
 		},
 		caps: {
-			gold: 25,
-			favor: 10
+			gold: 100,
+			favor: 25
 		},
 		bonuses: {
 		},
@@ -695,6 +730,57 @@ export const builds = buildings({
 		toggleable: false,
 		
 		criteria: ['government'],
+		
+	},
+	'oil well': {
+		id: 12,
+		name: 'Oil Well',
+		description: '',
+		costs: {
+			iron: 2000,
+			coal: 2000,
+		},
+		craftCosts: {
+			steel: 20,
+			spring: 20
+		},
+		ratio: 1.15,
+		gens: {
+			oil: 0.03
+		},
+		caps: {},
+		bonuses: {
+		},
+		subtracts: {},
+		toggleable: false,
+		
+		criteria: ['chemistry'],
+		
+	},
+	'factory': {
+		id: 30,
+		name: 'Factory',
+		description: 'Increases crafting yields by 10%.',
+		costs: {
+			sand: 10000,
+			wood: 3000,
+			copper: 1000,
+			iron: 750,
+			coal: 750
+		},
+		craftCosts: {
+			
+		},
+		ratio: 1.16,
+		gens: {
+		},
+		caps: {},
+		bonuses: {
+		},
+		subtracts: {},
+		toggleable: false,
+		
+		criteria: ['basic engineering'],
 		
 	},
 	'crypt': {
@@ -719,7 +805,144 @@ export const builds = buildings({
 		criteria: ['wizardry', 'basic mathematics'],
 		
 	},
+	'temple': {
+		id: 11,
+		name: 'Temple',
+		description: 'A shrine to what may lie beyond this plane.',
+		costs: {
+			wood: 4000,
+			iron: 1000,
+			gold: 50
+		},
+		craftCosts: {
+			plank: 10,
+			steel: 1
+		},
+		ratio: 1.16,
+		gens: {
+			karma: 0.0014
+		},
+		bonuses: {},
+		caps: {
+		}, 
+		subtracts: {},
+		toggleable: false,
+		
+		criteria: ['religion'],
+		
+	},
+	'blast heater': {
+		id: 12,
+		name: 'Blast Heater',
+		description: '',
+		costs: {
+			
+		},
+		craftCosts: {
+			steel: 40
+		},
+		ratio: 1.16,
+		gens: {
+		},
+		bonuses: {
+			iron: 30
+		},
+		caps: {
+		}, 
+		subtracts: {
+			coal: 0.02
+		},
+		toggleable: true,
+		
+		criteria: ['ironworking'],
+		
+	},
+	'laboratory': {
+		id: 13,
+		name: 'Laboratory',
+		description: '',
+		costs: {
+			
+		},
+		craftCosts: {
+			alloy: 50,
+			journal: 20
+		},
+		ratio: 1.16,
+		gens: {
+			science: 0.2
+		},
+		bonuses: {
+			science: 65
+		},
+		caps: {
+			science: 10000
+		}, 
+		subtracts: {
 
+		},
+		toggleable: false,
+		criteria: ['biology'],
+		
+	},
+	'treasury': {
+		id: 14,
+		name: 'Treasury',
+		description: '',
+		costs: {
+			sand: 1500,
+			wood: 1500
+		},
+		craftCosts: {
+			steel: 15
+		},
+		ratio: 1.2,
+		gens: {
+			gold: 0.004
+		},
+		bonuses: {
+		},
+		caps: {
+			gold: 125
+		}, 
+		subtracts: {
+		},
+		toggleable: false,
+		
+		criteria: ['currency'],
+		
+	},
+	'warehouse': {
+		id: 15,
+		name: 'Warehouse',
+		description: 'Dramatic storage increases.',
+		costs: {
+			sand: 4250
+		},
+		craftCosts: {
+			plank: 40,
+			steel: 15
+		},
+		ratio: 1.15,
+		gens: {
+		},
+		bonuses: {
+		},
+		caps: {			
+			kelp: 10000,
+			sand: 4000,
+			wood: 4000,
+			copper: 4000,
+			iron: 1500,
+			coal: 1500
+		}, 
+		subtracts: {
+		},
+		toggleable: false,
+		
+		criteria: ['ironworking', 'basic engineering'],
+		
+	},
 })
 
 

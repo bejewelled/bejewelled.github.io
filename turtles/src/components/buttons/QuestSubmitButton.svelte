@@ -60,6 +60,8 @@
       res.add('glory', reward);
       unlockedResources.set(new Set([...get(unlockedResources), 'glory']))
       jobs.remJob(index);
+      affordStyle = setAffordStyle(index);
+      text = setText(index); 
     }
 
   }
@@ -80,7 +82,10 @@
   }
 
   function setAffordStyle(index) {
-  	if (get(jobs)[index]['cooldown']) { 
+    const type = $jobs[index]['type']
+    const amt = $jobs[index]['amount'] 
+  	if (get(jobs)[index]['cooldown'] ||
+      $res[type][0] < amt) { 
   		return "game-btn-noafford cursor-no-drop";
   	} else {
   		return "game-btn";

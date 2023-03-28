@@ -1,7 +1,8 @@
 
-<div on:click = {() => bank()}
-class='has-tooltip game-btn mainText p-1 items-center text-center 
-     {affordStyle} select-none'>Convert Fame to Glory
+<div on:click = {() => convert()}
+class='has-tooltip 
+  {$res['karma'][0] >= 25000000 ? 'game-btn' : 'game-btn-noafford'  } mainText p-1 items-center text-center select-none'>
+  Convert 25M Stored Karma into Light
           </div>
               <!-- {#each tooltipText as line} -->
 <!--               <div class="row">
@@ -33,7 +34,7 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
   let tooltipText = '';
   $: gloryBuffs = Object.entries(get(gloryBonuses));
   let affordStyle;
-  import { res, totalRes, gloryBonuses } from '../../data/player.js';
+  import { res, totalRes, gloryBonuses, religionTab } from '../../data/player.js';
   import { science } from '../../data/science.js';
   import {builds, buildCounts} from '../../data/buildings.js';
   import  fm  from '../../calcs/formulas.js'
@@ -41,7 +42,7 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
   import {onMount, onDestroy} from 'svelte'
   import {allGens} from '../../data/buildings.js'
 
-  let decround  = ((i, places) => {
+  let decround  = ((i, places=3) => {
     let s = ''; // shortener
     // if (i > 9750) {
     //   i /= 1000;
@@ -50,12 +51,15 @@ class='has-tooltip game-btn mainText p-1 items-center text-center
     return (Math.round(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();// + s
   })
 
-  function bank() {
-    let bankAmt = get(res)['fame'][0]
-    res.set('fame', 0);
+  function convert() {
+    let banked = $religionTab['karmaBanked'];
+    if (banked >= 25000000) {
+      res.add('light', 1);
+      religionTab.sub('karmaBanked', 25000000);
+    }
     // note: update the 1,000 if the ratio is changed over time
-    res.add('glory', bankAmt * 1);
-    totalRes.add('glory', bankAmt * 1);
+    //res.add('karma', bankAmt * 1);
+    //totalRes.add('karma', bankAmt * 1);
   }
 
 

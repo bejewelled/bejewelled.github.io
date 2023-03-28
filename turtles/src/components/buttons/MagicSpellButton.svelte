@@ -3,9 +3,9 @@
      class='has-tooltip gameText py-1 items-center text-center border-solid ml-1 mr-1
      {affordStyle} col-span-12
      select-none'>{setText(index)}
-              <span class='w-[290px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
+          <span class='w-[290px] tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
               <div class='title text-small-gray items-start text-center'>{setHeaderText(index)}</div>
-              <div class='py-1 text-white-500 mainText'><hr/></div>
+              <div class='text-white-500 mainText'><hr/></div>
 
               <div class="row">
                 <div class='grid items-start grid-cols-5 text-small'>
@@ -65,34 +65,10 @@
 
 
   function buy(index) {
-    if (index == 1 && get(fameTab)['jobUpgrades'][1] > 7) return; // max level of 7
     console.log(index)
-    if (get(res)['fame'][0] >= calcCost(index)) {
+    if (get(res)['magic'][0] >= calcCost(index)) {
       let i = get(fameTab);
-      res.sub('fame', calcCost(index)); // subtract fame
-      i['jobUpgrades'][index]['level']++; // inc level by 1 - cost dynamically updated
-      fameTab.setSelf(i); // writeback
-      bonusText = setBonusText(index);
-
-      // add a new job slot
-      if (index===2) {
-        jobs.setSelf([...$jobs,  { 
-          index: $jobs.length,
-          // whether this job slot is on cooldown
-          cooldown: true,
-          // the actual initial cooldown timer (used for styling)
-          initcd: 0,
-          // this will be a timestamp
-          nextTime: 0,
-          // glory gain
-          reward: 1,
-          // type of res needed
-          type: "wood",
-          // amount needed
-          amount: 1000
-        }])
-       jobs.addJob($jobs.length-1)
-      }
+      res.sub('magic', calcCost(index)); // subtract magic
     }
   }
 
@@ -115,8 +91,7 @@
   }
 
   function calcCost(index) {
-    const i = get(fameTab)['jobUpgrades'][index]
-    return Math.pow(i['ratio'], i['level']) * i['baseCost']
+    const i = get(
   }
 
   function setAffordStyle(index) {
@@ -152,7 +127,7 @@
       case 0:
         return 'Increases the completed job refresh rate by 5%.'
       case 1:
-        return 'Increases the maximum difficulty for jobs; higher difficulty jobs reward significantly more glory, but may not be possible. '
+        return 'Increases the maximum difficulty for jobs; higher difficulty jobs reward significantly more glory. '
       case 2:
         return 'Increase the number of simultaneous job listings by one.'
     }

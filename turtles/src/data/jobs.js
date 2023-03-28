@@ -1,8 +1,9 @@
 
 import {get, writable} from 'svelte/store'
 import {builds, buildCounts, allGens, allBonuses} from './buildings.js'
-import { science, baseScience } from './science.js';
-import {res, fameTab, unlockedResources } from './player.js'
+import { science } from './science.js';
+import {res, fameTab, unlockedResources, stardustTab } from './player.js'
+import {stardustBasics} from './stardust.js'
 import fm from '../calcs/formulas.js'
 import tb from '../calcs/tables.js'
 
@@ -23,6 +24,12 @@ function jobManager(info) {
 			}
 			return num;
 		},
+		setSelf(obj) {
+			update(i => {
+				i = obj;
+				return i;
+			})
+		},
 		jobComplete: (index) => info[index]['cooldown'],
 		addJob(index) {
 			update(i => {
@@ -31,11 +38,14 @@ function jobManager(info) {
 				let type, difficulty;
 				while (!choiceSuccess) {
 					type = possibleTypes[Math.floor(Math.random() * possibleTypes.length)]
-					if (type != 'glory' && type != 'fame') choiceSuccess = true;
+					if (type != 'glory' && 
+						type != 'fame' &&
+						type != 'favor' &&
+						type != 'stardust') choiceSuccess = true;
 				}
 				// effective difficulty
 				// calculated based on amount and rarity of resource required
-				let maxDiff = get(fameTab)['jobUpgrades'][1]['level'] + 4
+				let maxDiff = get(fameTab)['jobUpgrades'][1]['level'] + 2
 
 				
 				const diffTable = tb.jobDifficultyTable();
@@ -53,6 +63,8 @@ function jobManager(info) {
 				const gtTemp = tb.difficultyGloryTable();
 				const rewardMulti = (3 * Math.pow(1.1, get(fameTab)['jobUpgrades'][1]['level']));
 				let reward = gtTemp[difficulty] * Math.max(1, rewardMulti * 2 * Math.pow(difficulty-1, 2) / 60.5);
+				reward *= get(stardustBasics)[1]['formula'](get(stardustTab)['basicUpgrades'][1]);  // stardust bonus (Taurus)
+
 				let amount = (get(allGens)[type] || 400 * Math.pow(1.03, Math.max(8 - difficulty, 1))) * time 
 				i[index]['cooldown'] = false;
 				i[index]['type'] = type;
@@ -74,7 +86,7 @@ function jobManager(info) {
 		},
 		renew() {
 			update(i => {
-				for (let c = 0; c < 5; c++) {
+				for (let c = 0; c < i.length; c++) {
 					if (i[c]['cooldown'] && i[c]['nextTime'] < Date.now()) {
 						i[c]['cooldown'] = false;
 						this.addJob(c);

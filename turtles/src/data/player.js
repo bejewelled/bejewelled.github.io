@@ -60,6 +60,7 @@ function playerRes(info) {
 					}
 					if (amt >= 0) {
 						// @ts-ignore
+						//console.log(type);	
 						if (i[type][1] > -0.9) {
 			      			// @ts-ignore
 			      			i[type][0] = (i[type][0] + (amt*multi) < i[type][1] ? i[type][0]+(amt*multi) : i[type][1])
@@ -135,6 +136,7 @@ function playerRes(info) {
 			for (let [type, amt] of Object.entries(obj)) {
 				update(i => {
 		      		// @ts-ignore
+		      		
 		      		i[type][0] = (i[type][0] - amt > 0 ? i[type][0]-amt : 0)
 		      		return i;
 	      		})
@@ -145,12 +147,18 @@ function playerRes(info) {
 		 * @param {string | number} type
 		 * @param {any} amt
 		 */
-		set(type, amt) {
+		setItem(type, amt) {
 			update(i => {
 	      		// @ts-ignore
 	      		i[type][0] = amt;
 	      		return i;
       		})
+		},
+		set(amt) {
+			update(i => {
+				i = amt;
+				return i;
+			})
 		},
 		// adds many at once with typical object format (type: amt)
 		/**
@@ -277,6 +285,17 @@ function basic(info) {
 				i[key] = value;
 				return i;
 			})
+		},
+		// sets all values in an object to zero, unless there is a default value given
+		reset(except) {
+			update(i => {
+				for (let c of Object.entries(i)) {
+					console.log(c[0]);
+					console.log(i[c[0]]);
+					i[c[0]] = (except?.c[0] || 0)
+				}
+				return i;
+			})
 		}
 	};
 }
@@ -290,13 +309,17 @@ export const res = playerRes({
 	wood: [0,50,0,0],
 	copper: [0,100,0,0],
 	iron: [0,100,0,0],
-	coal: [0, 50,0,0],
+	coal: [0,50,0,0],
 	gold: [0,25,0,0],
+	oil: [0,100,0,0],
 
 	science: [0,200,0,0],
+	favor: [0,10,0,0],
 	magic: [0,35,0,0],
+	karma: [0,-1,0,0],
 	fame: [0,-1,0,0],
-	glory: [0,-1,0,0]
+	glory: [0,-1,0,0],
+	stardust: [0,-1,0,0]
 });
 
 // update as new resources are added 
@@ -312,27 +335,35 @@ export const baseRes = playerRes({
 	iron: [0,100,0,0],
 	coal: [0,50,0,0],
 	gold: [0,25,0,0],
+	oil: [0,100,0,0],
+
 	science: [0,200,0,0],
-	favor: [0,50,0,0],
+	favor: [0,25,0,0],
 	magic: [0,35,0,0],
+	karma: [0,-1,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0],
+	stardust: [0,-1,0,0]
 });
 
 // update as new resources are added 
 export const totalRes = playerRes({
-	kelp: [0,500,0],
-	sand: [0,50,0],
-	wood: [0,50,0],
-	copper: [0,100,0],
-	iron: [0,100,0],
-	coal: [0,50,0],
-	gold: [0,25,0],
-	science: [0,200,0],
-	favor: [0,200,0,0],
+	kelp: [0,500,0,0],
+	sand: [0,50,0,0],
+	wood: [0,50,0,0],
+	copper: [0,100,0,0],
+	iron: [0,100,0,0],
+	coal: [0,50,0,0],
+	gold: [0,25,0,0],
+	oil: [0,100,0,0],
+
+	science: [0,200,0,0],
+	favor: [0,25,0,0],
 	magic: [0,35,0,0],
-	fame: [0,-1,0],
-	glory: [0,-1,0],
+	karma: [0,-1,0,0],
+	fame: [0,-1,0,0],
+	glory: [0,-1,0,0],
+	stardust: [0,-1,0,0]
 });
 
 // index 0: amount
@@ -345,11 +376,25 @@ export const totalRes = playerRes({
 export const craftRes = playerRes({
 	plank: [0,0,0,1],
 	tinder: [0,0,0,1],
+	steel: [0,0,0,1],
+	alloy: [0,0,0,2],
+	spring: [0,0,0,2],
+	wire: [0,0,0,2],
+
+	journal: [0,0,0,2],
+
 
 })
 
 export const baseCraftRes = playerRes({
 	plank: [0,0,0,1],
+	tinder: [0,0,0,1],
+	steel: [0,0,0,1],
+	alloy: [0,0,0,2],
+	spring: [0,0,0,2],
+	wire: [0,0,0,2],
+
+	journal: [0,0,0,2],
 })
 
 export const craftCosts = basic({
@@ -359,7 +404,32 @@ export const craftCosts = basic({
 	tinder: {
 		kelp: 2500,
 		sand: 100
-	}
+	},
+	steel: {
+		iron: 300,
+		coal: 300
+	},
+	spring: {
+		iron: 250,
+		craftable: {
+			steel: 30
+		}
+	},
+	journal: {
+		science: 20000,
+		favor: 50
+	},
+	alloy: {
+		copper: 5000,
+		craftable: {
+			steel: 100
+		}
+	},
+	wire: {
+		copper: 150,
+		gold: 45
+	},
+
 
 })
 
@@ -378,7 +448,7 @@ export const fameTab = basic({
 		{
 			index: 0,
 			level: 0,
-			baseCost: 10,
+			baseCost: 100,
 			ratio: 1.15
 		},
 		{
@@ -404,14 +474,14 @@ export const baseFameTab = basic({
 		{
 			index: 0,
 			level: 0,
-			baseCost: 10,
+			baseCost: 100,
 			ratio: 1.15
 		},
 		{
 			index: 1,
 			level: 0,
-			baseCost: 500,
-			ratio: 3
+			baseCost: 7500,
+			ratio: 2.5
 		},
 		{
 			index: 2,
@@ -432,16 +502,39 @@ export const basePolicyTab = basic({
 	policiesResearched: 0
 })
 
+export const magicTab = basic({
+	spellsActive: [0,0,0,0,0,0,0,0,0], // which spells are active
+
+})
+
+export const religionTab = basic({
+	karmaBanked: 0,
+})
+
+export const stardustTab = basic({
+	lastReset: -1,
+	basicUpgrades: [0,0,0,0,0,0,0,0,0,0,0,0],
+	generators: [0,0,0,0]
+})
+
+export const baseStardustTab = basic({
+	lastReset: -1,
+	basicUpgrades: [0,0,0,0,0,0,0,0,0,0,0,0],
+	generators: [0,0,0,0]
+})
+
 export const visible = basic({
 	builds: new Set(),
 	science: new Set(),
-	policy: new Set(),
+	policy: new Set(),  
+	stardust: new Set()
 })
 
 export const researched = basic({
 	builds: new Set(),
 	science: new Set(),
 	policy: new Set(),
+	stardust: new Set()
 })
 
 export const policyBonuses = basic({
@@ -453,4 +546,9 @@ export const policyBonuses = basic({
 export const gloryBonuses = playerRes({
 	'Production Bonus': [0],
 	'Cost Ratio Reduction': [0]
+})
+
+
+export const flags = basic({
+	updateCapFlag: 0 // if 1, then the next big tick (1s) will update all caps and set flag to 0
 })
