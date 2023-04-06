@@ -12,6 +12,14 @@ export default class fm {
     return base * Math.pow(ratio, count);
   }
 
+  static finiteGeomSum (a,r,n) {
+    if (r === 1) {
+      return a * n; // If r = 1, the sum is just a*n.
+    } else {
+      return a * (1 - Math.pow(r, n)) / (1 - r);
+    }
+  }
+
 	// takes time in seconds and formats it to h/m/s
 	static formatToTime(t) {
     let text = '';
@@ -75,6 +83,96 @@ export default class fm {
 
     const total = Math.floor((a + b + e) * c * d) + 1600;
     return [total, a, b, c, d, e];
+  }
+
+  static getBaseSigilProbTable() {
+    return [100,0,0,0,0,0,0];
+
+  }
+
+  static getSigilProbTable(n) {
+    let base = this.getBaseSigilProbTable();
+    const mult = Math.pow(n,0.5);
+    let change = [
+      0,
+      0.04 * mult,
+      0.008 * mult,
+      0.001 * mult,
+      0.0001 * mult,
+      1e-6 * mult,
+      1e-8 * mult
+    ]
+    base = base.map(function(v,i) { return (v + change[i]); }); 
+    base[0] -= this.sumArray(change);
+    return base;
+  }
+
+  static getSigilProbTableIndex(n, index) {
+    let base = this.getBaseSigilProbTable();
+    const mult = Math.pow(n,0.5);
+    let change = [
+      0,
+      0.04 * mult,
+      0.008 * mult,
+      0.001 * mult,
+      0.0001 * mult,
+      1e-6 * mult,
+      1e-8 * mult
+    ]
+    base = base.map(function(v,i) { return (v + change[i]); }); 
+    base[0] -= this.sumArray(change);
+    return base[index];
+  }
+
+
+  static getNextSigil(probTable) {
+    let rand = Math.random() * 100;
+    for (let i = 0; i < probTable.length; i++) {
+      rand -= probTable[i];
+      if (rand < 0) {
+        return i;
+      }
+    }
+    return 6;
+  }
+
+  // this is per tick, not per second
+  static calcSigilPowerGain(sigils) {
+    let base = Math.pow(sigils[0]*0.1, 0.25)+(0.001*sigils[0]);
+    base = base *
+    (1+Math.pow(sigils[1], 0.6))      *
+    (1+Math.pow(sigils[2], 0.7))      *
+    (1+Math.pow(sigils[3], 0.8))      *
+    (1+Math.pow(sigils[4], 0.9)*1.25) *
+    (1+Math.pow(sigils[5], 1)  *2)    *
+    (1+Math.pow(sigils[6], 1.1)*4)   
+
+    return base / 5; 
+  }
+
+  // this is per second, not per tick
+  static getSigilPowerArray(sigils) {
+    let array = [
+    Math.pow(sigils[0]*0.1, 0.25)+(0.001*sigils[0])/5,
+    (1+Math.pow(sigils[1], 0.6)),     
+    (1+Math.pow(sigils[2], 0.7)),      
+    (1+Math.pow(sigils[3], 0.8)),      
+    (1+Math.pow(sigils[4], 0.9)*1.25),
+    (1+Math.pow(sigils[5], 1)  *2),   
+    (1+Math.pow(sigils[6], 1.1)*4),  
+    ]
+    return array;
+  }
+
+  static getPowerCraftCost(cid, tier) {
+    let base = 1000 * Math.pow(tier, 6);
+    switch (cid) {
+      case 'alloy':
+        base *= 8;
+        return base;
+      default:
+        return base;
+    }
   }
 
 }

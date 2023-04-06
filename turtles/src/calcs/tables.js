@@ -43,4 +43,14 @@ export default class tb {
     }
   }
 
+  static powerCraftCostBase() {
+    return {
+      1: 1000,
+      2: 40000,
+      3: 2e6,
+      4: 5e7,
+      5: 3e9
+    }
+  }
+
 }

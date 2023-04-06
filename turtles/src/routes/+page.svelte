@@ -1,4 +1,4 @@
-<div class='container'>
+	<div class='container'>
 	<div class='grid mainText row header-bar h-[3px] p-1'>
 		<div class='grid grid-cols-[16_/_span_16] items-start pb-2'>
 			<div class='col-span-3'>
@@ -47,12 +47,25 @@
 						
 						<div class='col-span-4 invisible lg:visible text-left mainText gameTextWhite 
 						has-tooltip mainText select-none'>
-						{#if !($allGens[res[0]] === undefined) && $allGens[res[0]] > 0}
-							{#if $resDeltas[res[0]] >= 0}+{/if}
-							{#if Math.abs($resDeltas[res[0]]) >= 0.0000199}
-								{round($resDeltas[res[0]]*5)} / sec
+						{#if !(($allGens[res[0]] === undefined) && $allGens[res[0]] > 0) ||
+							(res[0] === 'power' && $magicTab['sigils'][0] > 0)}
+							{#if res[0] === 'power'}
+								{#if fm.calcSigilPowerGain($magicTab['sigils']) >= 0}+{/if}
+								{#if fm.calcSigilPowerGain($magicTab['sigils']) >= 0.0000199}
+									{round(fm.calcSigilPowerGain($magicTab['sigils'])*5,3)} / sec
+								{:else}
+									... / sec
+								{/if}						
+
 							{:else}
-								... / sec
+								{#if $resDeltas[res[0]] >= 0}+{/if}
+								{#if Math.abs($resDeltas[res[0]]) >= 0.0000199}
+									{round($resDeltas[res[0]]*5)} / sec
+								{:else}
+									{#if $resDeltas[res[0]]}
+									... / sec
+									{/if}
+								{/if}
 							{/if}
 						{/if}
 
@@ -60,6 +73,11 @@
 					<!-- production tooltip -->
 					<span class='w-[max-width-270px] text-small
 						grid row tooltip shadow-lg p-1 border-white border bg-[#222529] ml-16'>
+						{#if res[0] === 'power'}
+							<div class='w-[280px] text-center'>
+								See Magic tab for production breakdown
+							</div>						
+						{:else}
 							<div class='grid row grid-cols-12 items-start pb-1'>
 										<span class='col-span-7 text-left'>
 											Production: 
@@ -135,7 +153,8 @@
 										</div>
 										{/if}
 									{/if}
-								</span>
+								{/if}
+							</span>
 						</div>
 							{/if}	
 				{/each}
@@ -209,6 +228,18 @@
 							{:else}
 							<div class='flex'>
 								<TabButton text='Lv 4'/>
+							</div>
+							{/if}
+						{/if}
+
+						{#if $fameTab['gloryLevel'] >= 1}
+							{#if $fameTab['gloryLevel'] >= 1}
+							<div class='flex'>
+								<TabButton on:click={() => changeTab('magic')} text='Magic'/>
+							</div>
+							{:else}
+							<div class='flex'>
+								<TabButton text='Lv 5'/>
 							</div>
 							{/if}
 						{/if}
@@ -344,6 +375,48 @@
 					{/if}
 				{/if}
 
+				{#if activeTab === 'magic'}
+					<div class='py-2'></div>
+					<SigilBuyButton />
+					<MagicCapIncreaseButton />
+					<div class='py-4'><hr /></div>
+
+					{#each $magicTab['sigils'] as s, i}
+						<MagicDisplay index={i} />
+					{/each}
+
+					<div class='py-2'></div>
+
+					<div class='py-1 gameTextWhite'>Craft materials using sheer magic.</div> 
+					<span class='gameTextWhite'> 
+						<span class='text-purple-300 gameText'>power:</span>
+						{round($res['power'][0],3)} 
+					</span>
+								
+			<div class='grid grid-cols-12'>
+				{#each Object.entries($craftRes) as cres}
+					{#if $craftTier >= cres[1][3]}
+							<div class="col-span-3 mainText py-0 text-left">
+								<span class="{colors[cres[0]] || colors['default']}">{cres[0]}</span>
+							</div>
+							<div class="col-span-3 mainText gameTextWhite py-0 text-left">
+								{round(fm.getPowerCraftCost(cres[0], $craftRes[cres[0]][3]), 0)} / unit
+							</div>
+							<div class="col-span-2 pr-1 py-0 mainText">
+								<CraftButtonPower id={cres[0]} amt=1 />
+							</div>
+							<div class="col-span-2 pr-1 py-0 mainText">
+								<CraftButtonPower id={cres[0]} amt=25 />
+							</div>
+							<div class="col-span-2 pr-1 py-0 mainText">
+								<CraftButtonPower id={cres[0]} amt=1000 />
+							</div>
+						
+					{/if}
+				{/each}
+					</div>
+				{/if}
+
 				{#if activeTab === 'stardust'}
 						<div class='py-2'></div>
 						<div class='pb-1 text-small-gray text-center'>
@@ -394,6 +467,7 @@
 	import ScienceButton from '../components/buttons/ScienceButton.svelte';
 	import ClickButton from '../components/buttons/ClickButton.svelte';
 	import CraftButton from '../components/buttons/CraftButton.svelte';
+	import CraftButtonPower from '../components/buttons/CraftButtonPower.svelte'
 	import SaveLoadButton from '../components/buttons/SaveLoadButton.svelte';
 	import TabButton from '../components/buttons/TabButton.svelte';
 	import PolicyButton from '../components/buttons/PolicyButton.svelte'
@@ -405,8 +479,11 @@
 	import StardustResetButton from '../components/buttons/StardustResetButton.svelte';
 	import StardustBasicUpgradeButton from '../components/buttons/StardustBasicUpgradeButton.svelte'
 	import StardustGeneratorButton from '../components/buttons/StardustGeneratorButton.svelte';
+	import SigilBuyButton from '../components/buttons/SigilBuyButton.svelte'
+	import MagicDisplay from '../components/misc/MagicDisplay.svelte'
+	import MagicCapIncreaseButton from '../components/buttons/MagicCapIncreaseButton.svelte'
 	import { res, baseRes, gloryBonuses, totalRes, craftRes, baseCraftRes, fameTab, baseFameTab, policyTab, basePolicyTab, unlockedResources, visible, researched, craftTier, policyBonuses,
-	religionTab, stardustTab, baseStardustTab, flags} from '../data/player.js';
+	religionTab, stardustTab, baseStardustTab, magicTab, baseMagicTab, flags} from '../data/player.js';
 	import { builds, allGens, allSubtracts, allBonuses, resDeltas, buildCounts, baseAllGens, baseBuildCounts } from '../data/buildings.js';
 	import { science } from '../data/science.js';
 	import {jobs, baseJobs} from '../data/jobs.js'
@@ -456,6 +533,7 @@
 		glory: 'text-amber-300',
 		science: 'text-sky-500',
 		magic: 'text-indigo-500',
+		power: 'text-purple-300',
 		favor: 'text-emerald-500',
 		karma: 'text-teal-200',
 		stardust: 'text-fuchsia-400',
@@ -687,10 +765,11 @@
 	      					}
 	   				 	}
 				}
+
+				$res['magic'][1] += (10 * $magicTab['magicCapUpgrades'])
 				// stardust upgrade
 				const favorCapInc = $stardustTab['basicUpgrades'][3] * 5;
-				$res['favor'][1] += favorCapInc
-				
+				$res['favor'][1] += favorCapInc				
 	}
 
 //--------------
@@ -703,6 +782,14 @@
 	function addRes(delta) {
 		res.addMany(get(resDeltas), delta);
 		totalRes.addMany(get(resDeltas), delta, false, true);
+
+		// update power separately
+		const power = fm.calcSigilPowerGain($magicTab['sigils']);
+		console.log($magicTab['sigils'])
+		res.add('power', (power)*delta);
+		if (power > 0 && !($unlockedResources.has('power'))) $unlockedResources.add('power');
+
+
 		counter++;
 		if (counter > 5) {
 			counter = 0;
@@ -716,6 +803,8 @@
 			if (get(totalRes)['glory'][0] > 0) {
 				$unlockedResources.add('glory')
 			}
+
+
 			allSubtracts.updateAll();
 			allBonuses.updateAll();
 			resDeltas.updateAll();
@@ -752,7 +841,7 @@
 		savestr['policyTab'] = get(policyTab);
 		savestr['religionTab'] = get(religionTab);
 		savestr['stardustTab'] = get(stardustTab);
-
+		savestr['magicTab'] = get(magicTab);
 		savestr = btoa(JSON.stringify(savestr));
 		localStorage.setItem('data', savestr);
 	}
@@ -781,6 +870,7 @@
 			fameTab.setSelf(savestr['fameTab'] || get(baseFameTab));
 			console.log()
 			jobs.setSelf(savestr['jobs'] || get(baseJobs));
+			magicTab.setSelf(savestr['magicTab'] || get(baseMagicTab));
 			$craftTier = savestr['craftTier'] || 0;
 			visible.setSelf({
 				builds: new Set(savestr['visible'][0]),
@@ -830,6 +920,7 @@
 				if (!($buildCounts[i])) $buildCounts[i] = [0,0];
 			}
 
+			if (!($magicTab['magicCapUpgrades'])) $magicTab['magicCapUpgrades'] = 0;
 
 			return true;
 		} catch (e) {
@@ -857,6 +948,7 @@
 		baseRes.clear();
 		res.setSelf(get(baseRes));
 		craftRes.setSelf(get(baseCraftRes));
+		magicTab.setSelf(get(baseMagicTab));
 		//automatic fame banking
    	$fameTab['gloryLevel'] = 1;
    	console.log($policyTab);
@@ -924,6 +1016,7 @@
     policy.setSelf(get(policy));
     fameTab.setSelf(get(baseFameTab));
    	$fameTab['gloryLevel'] = 1;
+   	magicTab.setSelf(get(baseMagicTab));
     policyTab.setSelf(get(basePolicyTab));
 		buildCounts.init();
 		science.lockAll();

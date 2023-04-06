@@ -2,28 +2,9 @@
 <div on:click = {() => convert()}
 class='has-tooltip 
   {$res['karma'][0] >= 25000000 ? 'game-btn' : 'game-btn-noafford'  } mainText p-1 items-center text-center select-none'>
-  Convert 25M Stored Karma into Light
-          </div>
-              <!-- {#each tooltipText as line} -->
-<!--               <div class="row">
-                <div class='grid items-start grid-cols-3'>
-                <div class="col-span-1 items-start text-left text-white-500 ">{line.val}</div>
-                 <div class="col-span-2 text-left
-                 items-baseline {line['type']==='noAfford' ? 'text-red-500' : 'text-white-500'}">{line.text}</div>
-              </div>
-            </div> -->
-              <!-- {/each}  -->
-              <!-- {#if bonusText.length > 0}
-              <div class='spacer text-small-gray text-center pt-1 pb-1'> <hr/> </div>              
-              {#each bonusText as line}
-              <div class="row grid-rows-1 items-baseline">
-                <div class='grid text-small-gray grid-cols-1'>
-                 <div class="col-span-1 text-left">{line}</div>
-              </div>
-            </div> 
-              {/each}
-              {/if}   -->        
-
+  Convert 25M Banked Karma into Light      
+   
+</div>
 
 
 <script>
@@ -42,14 +23,17 @@ class='has-tooltip
   import {onMount, onDestroy} from 'svelte'
   import {allGens} from '../../data/buildings.js'
 
-  let decround  = ((i, places=3) => {
-    let s = ''; // shortener
-    // if (i > 9750) {
-    //   i /= 1000;
-    //   s = 'K';
-    // }
-    return (Math.round(i*Math.pow(10,places))/Math.pow(10,places)).toLocaleString();// + s
-  })
+  const decround = (n, places=3) => {
+    if (n < 1e3) return n.toLocaleString();
+    if (n >= 1e3 && n < 1e6) return +(n / 1e3).toFixed(places) + "K";
+    if (n >= 1e6 && n < 1e9) return +(n / 1e6).toFixed(places) + "M";
+    if (n >= 1e9 && n < 1e12) return +(n / 1e9).toFixed(places) + "B";
+    if (n >= 1e12) return +(n / 1e12).toFixed(places) + "T";
+  };
+
+  function calcCost() {
+
+  }
 
   function convert() {
     let banked = $religionTab['karmaBanked'];

@@ -742,11 +742,36 @@ export const builds = buildings({
 		},
 		craftCosts: {
 			steel: 20,
-			spring: 20
+			spring: 3
 		},
 		ratio: 1.15,
 		gens: {
 			oil: 0.03
+		},
+		caps: {
+			oil: 100,
+		},
+		bonuses: {
+		},
+		subtracts: {},
+		toggleable: false,
+		
+		criteria: ['chemistry'],
+		
+	},
+	'mine': {
+		id: 42,
+		name: 'Mine',
+		description: '',
+		costs: {
+			wood: 2500,
+		},
+		craftCosts: {
+			steel: 15
+		},
+		ratio: 1.16,
+		gens: {
+			coal: 0.01
 		},
 		caps: {},
 		bonuses: {
@@ -754,7 +779,7 @@ export const builds = buildings({
 		subtracts: {},
 		toggleable: false,
 		
-		criteria: ['chemistry'],
+		criteria: ['basic engineering'],
 		
 	},
 	'factory': {
@@ -781,6 +806,33 @@ export const builds = buildings({
 		toggleable: false,
 		
 		criteria: ['basic engineering'],
+		
+	},
+	'oxidizer': {
+		id: 30,
+		name: 'Oxidizer',
+		description: '',
+		costs: {
+			oil: 150
+		},
+		craftCosts: {
+			alloy: 2,
+			wire: 15
+		},
+		ratio: 1.25,
+		gens: {
+			iron: 0.1,
+			cobalt: 0.0006
+		},
+		caps: {},
+		bonuses: {
+		},
+		subtracts: {
+			oil: 0.05
+		},
+		toggleable: true,
+		
+		criteria: ['chemistry'],
 		
 	},
 	'crypt': {
@@ -865,7 +917,7 @@ export const builds = buildings({
 			
 		},
 		craftCosts: {
-			alloy: 50,
+			alloy: 12,
 			journal: 20
 		},
 		ratio: 1.16,

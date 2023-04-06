@@ -202,6 +202,18 @@ export const science = scienceCreator({
 		researched: false,		
 		available: false,		
 		criteria: ['writing', 'heat']		
+	},
+	'runecrafting': {			
+		id: 100,		
+		name: 'Runecrafting',		
+		description: '...',		
+		costs: {		
+			science: 90000,	
+			fame: 10000	
+		},		
+		researched: false,		
+		available: false,		
+		criteria: ['wizardry']		
 	},			
 	'agriculture': {			
 		id: 9,		

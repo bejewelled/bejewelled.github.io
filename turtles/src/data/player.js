@@ -300,6 +300,7 @@ function basic(info) {
 	};
 }
 
+// RESOURCES_UPDATER
 // update as new resources are added 
 // index 0 - the resource amount
 // index 1 - the cap amount, or -1 if uncapped
@@ -311,11 +312,13 @@ export const res = playerRes({
 	iron: [0,100,0,0],
 	coal: [0,50,0,0],
 	gold: [0,25,0,0],
-	oil: [0,100,0,0],
+	oil: [0,0,0,0],
+	cobalt: [0,50,0,0],
 
 	science: [0,200,0,0],
 	favor: [0,10,0,0],
 	magic: [0,35,0,0],
+	power: [0,-1,0,0],
 	karma: [0,-1,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0],
@@ -335,11 +338,13 @@ export const baseRes = playerRes({
 	iron: [0,100,0,0],
 	coal: [0,50,0,0],
 	gold: [0,25,0,0],
-	oil: [0,100,0,0],
+	oil: [0,0,0,0],
+	cobalt: [0,50,0,0],
 
 	science: [0,200,0,0],
 	favor: [0,25,0,0],
 	magic: [0,35,0,0],
+	power: [0,-1,0,0],
 	karma: [0,-1,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0],
@@ -355,11 +360,13 @@ export const totalRes = playerRes({
 	iron: [0,100,0,0],
 	coal: [0,50,0,0],
 	gold: [0,25,0,0],
-	oil: [0,100,0,0],
+	oil: [0,0,0,0],
+	cobalt: [0,50,0,0],
 
 	science: [0,200,0,0],
 	favor: [0,25,0,0],
 	magic: [0,35,0,0],
+	power: [0,-1,0,0],
 	karma: [0,-1,0,0],
 	fame: [0,-1,0,0],
 	glory: [0,-1,0,0],
@@ -420,9 +427,9 @@ export const craftCosts = basic({
 		favor: 50
 	},
 	alloy: {
-		copper: 5000,
+		copper: 2500,
 		craftable: {
-			steel: 100
+			steel: 75
 		}
 	},
 	wire: {
@@ -503,7 +510,14 @@ export const basePolicyTab = basic({
 })
 
 export const magicTab = basic({
-	spellsActive: [0,0,0,0,0,0,0,0,0], // which spells are active
+	sigilsBought: 0,
+	sigils: [0,0,0,0,0,0,0],
+	magicCapUpgrades: 0
+})
+
+export const baseMagicTab = basic({
+	sigilsBought: 0,
+	sigils: [0,0,0,0,0,0,0]
 
 })
 

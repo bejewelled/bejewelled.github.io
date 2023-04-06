@@ -63,11 +63,10 @@
 
   onMount(() => { 
     amt = parseInt(amt);
-    console.log(amt);
     id = id.toLowerCase();
     getAffordStyle(id, amt);   
     affordStyleInterval = setInterval(() => {
-      
+      getAffordStyle(id,amt);
     }, updateInterval);
   })
 
@@ -83,12 +82,11 @@
     for (let [type, val] of Object.entries($craftCosts[cid])) {
       if (type == 'craftable') {
         for (let [k,v] of Object.entries(val)) {
-          req = v;
-          txt = decround(req*amt, 3)         
+          let req = v*amt;
           if ($craftRes[k][0] < req) {
             return;
           } else {
-            craftTakes[type] = req;
+            craftTakes[k] = req;
           }
         }
       } else {
@@ -169,12 +167,11 @@
     let list = []
     for (let [type, val] of Object.entries(get(craftCosts)[bid])) {
       let req = val*amt;
-      let txt = decround(req*amt, 3)
+      let txt = decround(req, 3)
       if (type == 'craftable') {
         for (let [k,v] of Object.entries(val)) {
           req = v;
-          txt = decround(req*amt, 3) 
-          console.log(txt);        
+          txt = decround(req, 3)        
           if (get(craftRes)[k][0] < req) {
             list.push({
               type: 'text-noafford',
