@@ -16,7 +16,7 @@ function jobManager(info) {
 		subscribe,
 		// number of jobs that are available to complete
 		numJobs() {
-			const num = 0
+			let num = 0
 			for (let j of info) {
 				if (!j['cooldown']) {
 					num++;
