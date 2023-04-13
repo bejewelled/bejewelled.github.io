@@ -14,7 +14,20 @@ const config = {
   ],
 
 	kit: {
-		adapter: adapter()
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: null,
+			precompress: false
+		}),
+		appDir: 'app',
+		prerender: {
+			default: true,
+		},
+		trailingSlash: 'always',
+		paths: {
+			base: '/bejewelled.github.io'
+		}
 	}
 };
 
